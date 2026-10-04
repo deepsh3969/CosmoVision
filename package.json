@@ -1,0 +1,24 @@
+{
+  "name": "cosmovision",
+  "version": "1.0.0",
+  "description": "CosmoVision — Interactive 3D Universe. A procedural galaxy experience with Three.js, WebGL and MediaPipe hand tracking.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "serve . -l 4173",
+    "start": "serve . -l 4173"
+  },
+  "keywords": [
+    "threejs",
+    "webgl",
+    "galaxy",
+    "mediapipe",
+    "hand-tracking",
+    "creative-coding"
+  ],
+  "author": "Deepesh Chaurasia",
+  "license": "MIT",
+  "devDependencies": {
+    "serve": "^14.2.4"
+  }
+}
