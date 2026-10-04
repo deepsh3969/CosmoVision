@@ -4,6 +4,8 @@
 
 **A cinematic, procedural galaxy you can steer with your mouse, touch and hands.**
 
+**[Live demo →](https://cosmovision-tau.vercel.app)** · **[Release v1.0.0](https://github.com/deepsh3969/CosmoVision/releases/tag/v1.0.0)**
+
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white)
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=flat-square&logo=css3&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black)
