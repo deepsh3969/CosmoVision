@@ -7,3 +7,6 @@ Thumbs.db
 .idea/
 .vercel/
 *.log
+
+.vercel
+.env*
