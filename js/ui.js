@@ -22,7 +22,7 @@ export class UIController {
     this._buildHelpContent();
     this._restoreState();
 
-    if (window.innerWidth > 900) this.togglePanel(true);
+    if (window.innerWidth > 1300) this.togglePanel(true);
   }
 
   _cache() {
@@ -284,8 +284,10 @@ export class UIController {
       ['Scroll', 'Zoom in / out'],
       ['Right drag', 'Pan view'],
       ['Click', 'Select object'],
+      ['Double click', 'Focus object + open info'],
       ['Touch drag', 'Rotate view'],
       ['Pinch', 'Zoom in / out'],
+      ['Double tap', 'Focus object + open info'],
     ];
     for (const [key, action] of mouseRows) mouseList.appendChild(this._helpRow(key, action));
     for (const [key, action] of KEY_HINTS) keyList.appendChild(this._helpRow(key, action));

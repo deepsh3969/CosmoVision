@@ -16,8 +16,10 @@ export class SelectionManager {
     this._pointer = new THREE.Vector2();
     this._down = { x: 0, y: 0, at: 0, moved: false };
     this._world = new THREE.Vector3();
+    this._hoverWorld = new THREE.Vector3();
     this._resolveWorld = null;
     this._hoverCooldown = 0;
+    this._lastTap = { id: null, at: 0 };
 
     const ringGeometry = new THREE.RingGeometry(1, 1.075, 72);
     const ringMaterial = new THREE.MeshBasicMaterial({
@@ -44,11 +46,22 @@ export class SelectionManager {
     this._group = new THREE.Group();
     this._group.add(this.ring, this.innerRing);
 
+    // Hover glow: thin ring that tracks whatever the pointer is over.
+    const hoverMaterial = ringMaterial.clone();
+    hoverMaterial.color = new THREE.Color('#7ee7ff');
+    hoverMaterial.opacity = 0.55;
+    this.hoverRing = new THREE.Mesh(new THREE.RingGeometry(1, 1.04, 64), hoverMaterial);
+    this.hoverRing.renderOrder = 19;
+    this.hoverRing.visible = false;
+    this.hoverRing.frustumCulled = false;
+    this._hoverGroup = new THREE.Group();
+    this._hoverGroup.add(this.hoverRing);
+
     this._bind();
   }
 
   attachTo(scene) {
-    scene.add(this._group);
+    scene.add(this._group, this._hoverGroup);
   }
 
   setTargets(groups) {
@@ -79,7 +92,15 @@ export class SelectionManager {
       const isTap = !this._down.moved && quick && this._down.at > 0;
       this._down.at = 0;
       if (!isTap) return;
-      this.selectAt(event.clientX, event.clientY);
+      const id = this.selectAt(event.clientX, event.clientY);
+      // Second tap/click on the same object within 400ms = focus request.
+      const now = performance.now();
+      if (id && id === this._lastTap.id && now - this._lastTap.at < 400) {
+        this._lastTap = { id: null, at: 0 };
+        this.callbacks.onDoubleClick?.(id);
+      } else {
+        this._lastTap = { id, at: now };
+      }
     };
     window.addEventListener('pointerdown', this.onPointerDown);
     window.addEventListener('pointermove', this.onPointerMove, { passive: true });
@@ -184,6 +205,24 @@ export class SelectionManager {
     return id;
   }
 
+  // Hover glow ring (throttled by caller); hidden while the object is selected.
+  updateHover(objectRadius = 0.05) {
+    const id = this.hoveredId;
+    if (!id || id === this.selectedId || !this._resolveWorld) {
+      this.hoverRing.visible = false;
+      return;
+    }
+    const position = this._resolveWorld(id, this._hoverWorld);
+    if (!position) {
+      this.hoverRing.visible = false;
+      return;
+    }
+    this._hoverGroup.position.copy(position);
+    this._hoverGroup.quaternion.copy(this.camera.quaternion);
+    this.hoverRing.scale.setScalar(Math.max(objectRadius * 2.6, 0.02));
+    this.hoverRing.visible = true;
+  }
+
   dispose() {
     window.removeEventListener('pointerdown', this.onPointerDown);
     window.removeEventListener('pointermove', this.onPointerMove);
@@ -192,6 +231,9 @@ export class SelectionManager {
     this.ring.material.dispose();
     this.innerRing.geometry.dispose();
     this.innerRing.material.dispose();
+    this.hoverRing.geometry.dispose();
+    this.hoverRing.material.dispose();
     this._group.removeFromParent();
+    this._hoverGroup.removeFromParent();
   }
 }

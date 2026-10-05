@@ -886,7 +886,8 @@ kbd {
 .toast-host {
   position: fixed;
   left: 50%;
-  bottom: calc(96px + env(safe-area-inset-bottom));
+  top: calc(var(--hud-inset) + 190px);
+  bottom: auto;
   transform: translateX(-50%);
   z-index: 70;
   display: flex;
@@ -949,12 +950,6 @@ kbd {
     transform: translateY(110%);
   }
 
-  .panel-fab {
-    top: auto;
-    bottom: calc(var(--hud-inset) + 76px + env(safe-area-inset-bottom));
-    transform: none;
-  }
-
   .hud-stats {
     gap: 12px;
     padding: 10px 12px;
@@ -983,8 +978,7 @@ kbd {
 
 @media (max-width: 560px) {
   .status-pill {
-    padding: 6px 10px;
-    font-size: 0.55rem;
+    display: none;
   }
 
   .brand-name {
@@ -997,7 +991,12 @@ kbd {
   }
 
   .stat-value {
-    font-size: 0.85rem;
+    font-size: 0.78rem;
+  }
+
+  .stat-label {
+    font-size: 0.46rem;
+    letter-spacing: 0.12em;
   }
 
   .hand-preview {
@@ -1041,7 +1040,7 @@ kbd {
   gap: 6px;
   padding: 7px 12px;
   border-radius: 999px;
-  max-width: min(46vw, 540px);
+  max-width: min(34vw, 460px);
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -1083,8 +1082,18 @@ kbd {
 .fuel-fill[data-low="true"] { background: linear-gradient(90deg, var(--bad), var(--warn)); }
 .tele-status { margin: 9px 0 0; font-size: 0.56rem; letter-spacing: 0.3em; color: var(--accent); }
 .perf-line {
-  flex-basis: 100%; margin: 2px 0 0; font-size: 0.5rem; letter-spacing: 0.14em;
-  color: rgba(151, 162, 196, 0.75); font-variant-numeric: tabular-nums;
+  position: absolute;
+  bottom: 100%;
+  left: 18px;
+  margin: 0 0 5px;
+  font-size: 0.5rem;
+  letter-spacing: 0.14em;
+  color: rgba(151, 162, 196, 0.75);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: calc(50vw - var(--hud-inset) - 300px);
 }
 .hud-stats { flex-wrap: wrap; }
 
@@ -1118,7 +1127,7 @@ kbd {
   border-radius: 50%;
   background: rgba(6, 10, 20, 0.72);
 }
-body:has(#controlPanel.open) #minimapCanvas { right: calc(var(--hud-inset) + 352px); }
+
 
 /* Info panel */
 .info-panel {
@@ -1186,7 +1195,10 @@ body:has(#controlPanel.open) #minimapCanvas { right: calc(var(--hud-inset) + 352
   }
   .sim-bar::-webkit-scrollbar { display: none; }
   .info-panel { top: calc(var(--hud-inset) + 150px); max-height: 40vh; }
-  .telemetry { bottom: calc(var(--hud-inset) + 96px + env(safe-area-inset-bottom)); width: min(300px, calc(100vw - 32px)); }
+  .telemetry {
+    bottom: calc(var(--hud-inset) + 96px + env(safe-area-inset-bottom));
+    width: min(300px, calc(100vw - clamp(120px, 30vw, 160px) - 2 * var(--hud-inset) - 8px));
+  }
   #minimapCanvas {
     width: clamp(120px, 30vw, 160px);
     height: clamp(120px, 30vw, 160px);
@@ -1200,6 +1212,530 @@ body:has(#controlPanel.open) #minimapCanvas { right: calc(var(--hud-inset) + 352
 @media (max-width: 560px) {
   .tele-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px 8px; }
   .tele-value { font-size: 0.7rem; }
-  .info-panel { width: calc(100vw - 2 * var(--hud-inset)); }
+  .info-panel { width: calc(100vw - 2 * var(--hud-inset) - 64px); }
   .sim-bar { padding: 7px 10px; gap: 9px; }
+}
+
+/* ==========================================================================
+   v2.1 - POINT -> CLICK -> EXPLORE navigation
+   ========================================================================== */
+
+/* Bottom dock --------------------------------------------------------------- */
+.nav-dock {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--hud-inset) + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 24;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 18px;
+  max-width: calc(100vw - 2 * var(--hud-inset));
+}
+
+.nav-dock-row {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 38px;
+  flex-shrink: 0;
+  padding: 7px 13px;
+  border-radius: 999px;
+  border: 1px solid var(--stroke);
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  white-space: nowrap;
+  transition: color 0.18s ease, border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+}
+
+.nav-btn:hover:not(:disabled) {
+  color: var(--text);
+  border-color: rgba(126, 231, 255, 0.5);
+  background: rgba(126, 231, 255, 0.12);
+  transform: translateY(-1px);
+}
+
+.nav-btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
+.nav-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.nav-mode {
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.nav-mode button {
+  min-height: 38px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Context stack above the dock --------------------------------------------- */
+.nav-stack {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--hud-inset) + 108px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 24;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100vw - 2 * var(--hud-inset));
+  pointer-events: none;
+}
+
+.nav-stack > * {
+  pointer-events: auto;
+}
+
+/* Travel status */
+.nav-travel {
+  padding: 9px 18px;
+  border-radius: 999px;
+  border-color: rgba(126, 231, 255, 0.45);
+  font-size: 0.66rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--accent);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.nav-travel.visible {
+  opacity: 1;
+  transform: translateY(0);
+  animation: navPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes navPulse {
+  0%, 100% { box-shadow: 0 0 0 rgba(126, 231, 255, 0); }
+  50% { box-shadow: 0 0 22px rgba(126, 231, 255, 0.35); }
+}
+
+/* Control hints */
+.nav-hint {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 9px 10px 9px 18px;
+  border-radius: 999px;
+  transition: opacity 0.6s ease;
+}
+
+.nav-hint.fading {
+  opacity: 0;
+}
+
+.nav-hint-text {
+  font-size: 0.64rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.nav-hint-help {
+  padding: 7px 13px;
+  border-radius: 999px;
+  border: 1px solid rgba(126, 231, 255, 0.45);
+  color: var(--accent);
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition: background 0.18s ease;
+}
+
+.nav-hint-help:hover {
+  background: rgba(126, 231, 255, 0.14);
+}
+
+/* Location / target readout */
+.nav-readout {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px;
+  padding: 8px 16px;
+  border-radius: 999px;
+}
+
+.nav-readout-slot {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.nav-readout-slot b {
+  font-size: 0.54rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.nav-readout-slot i {
+  font-style: normal;
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.nav-readout-div {
+  width: 1px;
+  height: 16px;
+  background: var(--stroke-strong);
+}
+
+/* Planet browser */
+.nav-planets {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  max-width: 100%;
+}
+
+.nav-strip-label {
+  font-size: 0.52rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.nav-planet-list {
+  display: flex;
+  gap: 4px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.nav-planet-list::-webkit-scrollbar {
+  display: none;
+}
+
+.nav-planet {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--stroke);
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 0.95rem;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  color: var(--text-dim);
+  transition: color 0.18s ease, border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+}
+
+.nav-planet:hover {
+  border-color: rgba(126, 231, 255, 0.5);
+  color: var(--text);
+  transform: translateY(-2px);
+}
+
+.nav-planet.active {
+  background: rgba(126, 231, 255, 0.2);
+  border-color: var(--accent);
+  color: var(--text);
+  box-shadow: 0 0 14px rgba(126, 231, 255, 0.4);
+}
+
+.nav-strip-nav {
+  display: flex;
+  gap: 4px;
+}
+
+.nav-mini {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid var(--stroke);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-dim);
+  font-size: 0.7rem;
+  transition: color 0.18s ease, border-color 0.18s ease;
+}
+
+.nav-mini:hover {
+  color: var(--text);
+  border-color: rgba(126, 231, 255, 0.5);
+}
+
+/* Nearby objects strip */
+.nav-nearby {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  max-width: min(760px, calc(100vw - 2 * var(--hud-inset)));
+}
+
+.nav-nearby-list {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.nav-nearby-list::-webkit-scrollbar {
+  display: none;
+}
+
+.nav-chip {
+  padding: 6px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--stroke);
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  white-space: nowrap;
+  transition: color 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+
+.nav-chip:hover {
+  color: var(--text);
+  border-color: rgba(126, 231, 255, 0.5);
+  background: rgba(126, 231, 255, 0.12);
+}
+
+/* Welcome tutorial ---------------------------------------------------------- */
+.welcome-gestures {
+  list-style: none;
+  margin: 0 0 26px;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  text-align: left;
+}
+
+.welcome-gestures li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+.wg-icon {
+  width: 1.3em;
+  text-align: center;
+  font-size: 1rem;
+  color: var(--accent);
+}
+
+/* Layout adjustments for the dock band -------------------------------------- */
+@media (max-width: 1180px) {
+  .hud-stats {
+    gap: 10px;
+    padding: 10px 12px;
+  }
+
+  .hud-stats .stat {
+    min-width: 56px;
+  }
+}
+
+@media (max-width: 900px) {
+  .nav-dock {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    gap: 6px;
+    border-radius: 16px;
+  }
+
+  .nav-dock::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nav-dock-row {
+    display: contents;
+  }
+
+  .nav-btn,
+  .nav-mode button {
+    min-height: 44px;
+    padding: 9px 13px;
+    flex-shrink: 0;
+  }
+
+  .nav-stack {
+    bottom: calc(var(--hud-inset) + 74px + env(safe-area-inset-bottom));
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    left: var(--hud-inset);
+    right: calc(var(--hud-inset) + clamp(120px, 30vw, 160px) + 8px);
+    transform: none;
+    max-width: none;
+    justify-content: flex-start;
+  }
+
+  .nav-stack::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nav-stack > * {
+    flex-shrink: 0;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .hud-stats {
+    bottom: calc(var(--hud-inset) + 130px + env(safe-area-inset-bottom));
+    max-width: calc(100vw - clamp(120px, 30vw, 160px) - 2 * var(--hud-inset) - 8px);
+  }
+
+  .telemetry {
+    bottom: calc(var(--hud-inset) + 196px + env(safe-area-inset-bottom));
+  }
+
+  .nav-hint {
+    max-width: 100%;
+  }
+
+  .nav-hint-text {
+    white-space: normal;
+  }
+}
+
+@media (max-width: 560px) {
+  .nav-btn,
+  .nav-mode button {
+    font-size: 0.54rem;
+    letter-spacing: 0.08em;
+    padding: 9px 10px;
+  }
+
+  .welcome-gestures {
+    grid-template-columns: 1fr;
+  }
+
+  .nav-readout {
+    gap: 10px;
+    padding: 7px 12px;
+  }
+
+  .nav-hint {
+    gap: 8px;
+    padding: 8px 8px 8px 12px;
+    border-radius: 14px;
+  }
+
+  .nav-hint-text {
+    font-size: 0.56rem;
+  }
+
+  .hud-stats {
+    bottom: calc(var(--hud-inset) + 160px + env(safe-area-inset-bottom));
+    gap: 6px;
+    padding: 8px 10px;
+  }
+
+  .hud-stats .stat {
+    min-width: 46px;
+  }
+
+  .telemetry {
+    bottom: calc(var(--hud-inset) + 230px + env(safe-area-inset-bottom));
+  }
+}
+
+/* ==========================================================================
+   v2.2 - Layout band fixes (rows, dock band, strips, toasts)
+   ========================================================================== */
+
+/* The object card owns the lower-left column while it is open. */
+body:has(#infoPanel:not(.collapsed)) #telemetry,
+body:has(#infoPanel:not(.collapsed)) #hudStats {
+  display: none;
+}
+
+/* Give the simulation bar its own row so the breadcrumb keeps row one. */
+@media (min-width: 901px) and (max-width: 1920px) {
+  .sim-bar {
+    top: calc(var(--hud-inset) + 92px);
+    left: var(--hud-inset);
+    right: var(--hud-inset);
+    transform: none;
+    max-width: none;
+    overflow-x: auto;
+    scrollbar-width: none;
+    border-radius: var(--radius);
+    justify-content: center;
+  }
+
+  .sim-bar::-webkit-scrollbar { display: none; }
+
+  .info-panel { top: calc(var(--hud-inset) + 166px); }
+
+  body:has(#controlPanel.open) .sim-bar {
+    right: calc(var(--hud-inset) + 356px);
+  }
+}
+
+/* Narrow desktops: lift the left telemetry column above the dock band and
+   pin the centered context stack into the gap between it and the radar. */
+@media (min-width: 901px) and (max-width: 1300px) {
+  .hud-stats {
+    bottom: calc(var(--hud-inset) + 138px + env(safe-area-inset-bottom));
+    gap: 12px;
+  }
+
+  .perf-line { max-width: 352px; }
+
+  .telemetry { bottom: calc(var(--hud-inset) + 220px + env(safe-area-inset-bottom)); }
+
+  .nav-stack {
+    left: calc(var(--hud-inset) + 360px);
+    right: calc(var(--hud-inset) + clamp(150px, 15vw, 220px) + 16px);
+    transform: none;
+    max-width: none;
+  }
+
+  body:has(#controlPanel.open) .nav-stack {
+    right: calc(var(--hud-inset) + 356px);
+  }
+
+  .nav-stack > * { max-width: 100%; }
+  .nav-hint { max-width: 100%; }
+  .nav-hint-text { white-space: normal; }
 }

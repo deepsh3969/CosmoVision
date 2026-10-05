@@ -277,6 +277,8 @@ export const SYSTEM_HINTS = [
   ['G', 'Galaxy view'],
   ['S', 'Solar system view'],
   ['P', 'Planet view'],
+  ['BACK', 'Previous view (history)'],
+  ['HOME', 'Return to galaxy view'],
   ['M', 'Radar toggle'],
   ['C', 'Cinematic FX toggle'],
   ['H', 'Help panel'],

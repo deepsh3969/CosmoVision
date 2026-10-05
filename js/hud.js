@@ -40,6 +40,7 @@ export class HUD {
       btnFocus: document.getElementById('btnFocus'),
       btnExplore: document.getElementById('btnExplore'),
       btnTarget: document.getElementById('btnTarget'),
+      btnCloseInfo: document.getElementById('btnCloseInfo'),
       btnWormholeEnter: document.getElementById('btnWormholeEnter'),
       btnCinematic: document.getElementById('btnCinematic'),
       btnMinimap: document.getElementById('btnToggleMinimap'),
@@ -60,6 +61,7 @@ export class HUD {
     this.dom.btnFocus?.addEventListener('click', () => this.selectedDef && h.onFocus?.(this.selectedDef.id));
     this.dom.btnExplore?.addEventListener('click', () => this.selectedDef && h.onExplore?.(this.selectedDef.id));
     this.dom.btnTarget?.addEventListener('click', () => this.selectedDef && h.onTarget?.(this.selectedDef.id));
+    this.dom.btnCloseInfo?.addEventListener('click', () => h.onClose?.());
     this.dom.btnWormholeEnter?.addEventListener('click', () => this.selectedDef && h.onEnterWormhole?.(this.selectedDef.id));
     this.dom.btnCinematic?.addEventListener('click', () => h.onCinematicToggle?.());
     this.dom.btnMinimap?.addEventListener('click', () => h.onMinimapToggle?.());
@@ -189,11 +191,15 @@ export class HUD {
     this.dom.infoRows.innerHTML = rows.join('');
     if (this.dom.infoDesc) this.dom.infoDesc.textContent = def.description || '';
     if (this.dom.btnWormholeEnter) this.dom.btnWormholeEnter.hidden = def.type !== 'Wormhole';
-    if (this.dom.btnExplore) this.dom.btnExplore.hidden = def.id === 'milky-way';
+    if (this.dom.btnExplore) {
+      this.dom.btnExplore.hidden = def.id === 'milky-way';
+      this.dom.btnExplore.textContent = `Explore ${def.name}`;
+    }
   }
 
   setTarget(name) {
     if (this.dom.target) this.dom.target.textContent = name || '—';
+    if (this.dom.btnTarget) this.dom.btnTarget.textContent = name ? 'Clear Target' : 'Set Target';
   }
 
   setPerf({ ms = '—', calls = '—', tris = '—', mem = '—' } = {}) {

@@ -54,9 +54,15 @@
     <div class="welcome-card glass">
       <p class="brand-mark small">COSMOVISION</p>
       <p class="brand-tagline small">SPACE EXPLORATION SIMULATOR</p>
-      <h1 id="welcomeTitle">Explore the universe</h1>
-      <p class="welcome-copy">Pilot a spacecraft through a procedural galaxy. Visit the SOLARIS system, land your gaze on planets and moons, dock at stations, cross wormholes — with mouse, touch or your hands.</p>
-      <button id="btnEnter" class="btn btn-primary" type="button">Enter Universe</button>
+      <h1 id="welcomeTitle">Welcome to CosmoVision</h1>
+      <p class="welcome-copy">Point, click and explore the universe — no flight training required.</p>
+      <ul class="welcome-gestures" aria-label="How to explore">
+        <li><span class="wg-icon" aria-hidden="true">✥</span><span>Drag to rotate</span></li>
+        <li><span class="wg-icon" aria-hidden="true">⌕</span><span>Scroll to zoom</span></li>
+        <li><span class="wg-icon" aria-hidden="true">☝</span><span>Click to select</span></li>
+        <li><span class="wg-icon" aria-hidden="true">✦</span><span>Double-click to focus</span></li>
+      </ul>
+      <button id="btnEnter" class="btn btn-primary" type="button">Start Exploring</button>
       <p class="fineprint">Hand tracking is processed locally in the browser. Camera frames are not uploaded.</p>
     </div>
   </div>
@@ -141,6 +147,53 @@
 
   <canvas id="minimapCanvas" class="glass" width="220" height="220" aria-label="Navigation radar"></canvas>
 
+  <div class="nav-stack" id="navStack">
+    <div class="nav-travel glass hidden" id="navTravel" role="status" aria-live="polite"></div>
+
+    <div class="nav-hint glass hidden" id="navHint" role="note">
+      <span class="nav-hint-text">Drag to rotate · Scroll to zoom · Click an object to explore</span>
+      <button class="nav-hint-help" id="navHintHelp" type="button" aria-label="Help and controls" title="Help and controls">? Help</button>
+    </div>
+
+    <div class="nav-readout glass" id="navReadout" aria-label="Navigation status">
+      <span class="nav-readout-slot"><b>Location</b><i id="navLocation">MILKY WAY</i></span>
+      <span class="nav-readout-div" aria-hidden="true"></span>
+      <span class="nav-readout-slot"><b>Target</b><i id="navTarget">NONE</i></span>
+    </div>
+
+    <div class="nav-planets glass hidden" id="navPlanetBar" aria-label="SOLARIS planet browser">
+      <span class="nav-strip-label">Planets</span>
+      <div class="nav-planet-list" id="navPlanetList" role="group" aria-label="Planets"></div>
+      <div class="nav-strip-nav">
+        <button class="nav-mini" id="navPrevPlanet" type="button" aria-label="Previous planet" title="Previous planet">◀</button>
+        <button class="nav-mini" id="navNextPlanet" type="button" aria-label="Next planet" title="Next planet">▶</button>
+      </div>
+    </div>
+
+    <div class="nav-nearby glass hidden" id="navNearby" aria-label="Nearby objects">
+      <span class="nav-strip-label">Nearby</span>
+      <div class="nav-nearby-list" id="navNearbyList"></div>
+    </div>
+  </div>
+
+  <nav class="nav-dock glass" id="navDock" aria-label="Primary navigation">
+    <div class="nav-dock-row">
+      <button class="nav-btn" id="navBack" type="button" title="Back to the previous view" aria-label="Back to the previous view" disabled>← Back</button>
+      <button class="nav-btn" id="navHome" type="button" title="Home — return to the galaxy" aria-label="Home, galaxy view">⌂ Home</button>
+      <button class="nav-btn" id="navGalaxy" type="button" title="Milky Way galaxy view" aria-label="Galaxy view">🌌 Galaxy</button>
+      <button class="nav-btn" id="navSystem" type="button" title="SOLARIS solar system view" aria-label="Solar system view">☀ Solar System</button>
+    </div>
+    <div class="nav-dock-row">
+      <button class="nav-btn" id="navPlanets" type="button" title="Browse the planets" aria-label="Planet browser">🪐 Planets</button>
+      <button class="nav-btn" id="navFocus" type="button" title="Focus the selected object" aria-label="Focus selected object">🎯 Focus</button>
+      <div class="nav-mode segmented" id="navMode" role="group" aria-label="Navigation mode">
+        <button data-nav-mode="easy" class="active" type="button" aria-pressed="true" title="Easy mode — point and click navigation">Easy Mode ✓</button>
+        <button data-nav-mode="flight" type="button" aria-pressed="false" title="Space flight — advanced free-flight piloting">Space Flight</button>
+      </div>
+      <button class="nav-btn" id="navSearch" type="button" title="Search objects" aria-label="Search objects">⌕ Search</button>
+    </div>
+  </nav>
+
   <aside class="info-panel glass collapsed" id="infoPanel" aria-label="Selected object" aria-hidden="true">
     <p class="panel-kicker" id="infoType">NO SELECTION</p>
     <h2 class="info-name" id="infoName">Select an object</h2>
@@ -150,6 +203,7 @@
       <button class="btn btn-primary" id="btnFocus" type="button">Focus</button>
       <button class="btn" id="btnExplore" type="button">Explore</button>
       <button class="btn" id="btnTarget" type="button">Set Target</button>
+      <button class="btn" id="btnCloseInfo" type="button">Close</button>
       <button class="btn btn-warn" id="btnWormholeEnter" type="button" hidden>Enter Wormhole</button>
     </div>
     <p class="fineprint">Body data is real astronomical data; distances are simulation-scaled.</p>

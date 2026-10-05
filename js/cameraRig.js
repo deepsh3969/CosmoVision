@@ -92,6 +92,26 @@ export class CameraRig {
     this._settleMode(this.focusId ? 'follow' : 'orbit');
   }
 
+  // Re-engage follow mode at the current camera pose (used by BACK restore:
+  // keeps the saved camera position instead of flying a new transition).
+  focusInPlace(id, resolver, distance) {
+    const center = resolver(this._center);
+    if (!center) return false;
+    if (this.mode === 'flight') this.spacecraft.exit();
+    this.focusId = id;
+    this.focusResolver = resolver;
+    this.focusDistance = distance;
+    this.transition = null;
+    this.mode = 'follow';
+    this.controls.setActive(true);
+    this.controls.setInputBlocked(false);
+    this.orbitActive = true;
+    this.syncOrbitFrom(center);
+    this.callbacks.onFocusStart?.(id);
+    this.callbacks.onModeChange?.('follow');
+    return true;
+  }
+
   _settleMode(mode) {
     this.mode = mode;
     const center = this.focusResolver ? this.focusResolver(this._center) : this._center.set(0, 0, 0);

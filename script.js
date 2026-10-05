@@ -18,6 +18,8 @@ import { SelectionManager } from './js/selection.js';
 import { SpeedEffects } from './js/effects.js';
 import { Minimap } from './js/minimap.js';
 import { HUD } from './js/hud.js';
+import { NavigationManager } from './js/navigation.js';
+import { NavigationUI } from './js/navigationUi.js';
 import {
   DEFAULT_GALAXY,
   DEFAULT_VISUALS,
@@ -124,6 +126,7 @@ class Experience {
       onMinimapToggle: () => this.toggleMinimap(),
       onSearchSelect: (id) => this.focusObject(id),
       onNavigate: (id) => this.navigateBreadcrumb(id),
+      onClose: () => this._clearSelectionView(),
     };
   }
 
@@ -150,6 +153,10 @@ class Experience {
       this.ui.hideLoading();
       this._syncStatus();
       this.ui.showToast('Welcome aboard, pilot. Press H for controls, / to search the object database.', 'info', 6000);
+      // Returning visitors skip the welcome card — surface the control hints.
+      if (safeStorageGet(STORAGE_KEYS.welcome)) {
+        setTimeout(() => this.navigationUi?.showHint(), 1200);
+      }
     }, 500);
   }
 
@@ -277,6 +284,7 @@ class Experience {
         if (id) this.canvas.dataset.hover = id;
         else delete this.canvas.dataset.hover;
       },
+      onDoubleClick: (id) => this.focusObject(id),
     });
     this.selection.attachTo(this.scene);
     this.selection.setResolver((id, out) => this.resolveWorld(id, out));
@@ -302,6 +310,7 @@ class Experience {
       onMinimapToggle: () => this.toggleMinimap(),
       onSearchSelect: (id) => this.focusObject(id),
       onNavigate: (id) => this.navigateBreadcrumb(id),
+      onClose: () => this._clearSelectionView(),
     });
 
     this.hud.setSimSpeed(this.timeScale);
@@ -310,6 +319,32 @@ class Experience {
     this.hud.setCameraMode('orbit', { hasFocus: false });
     this.hud.setInfo(null);
     this.hud.setBreadcrumb('milky-way');
+
+    // Navigation layer: history/BACK, travel status and the primary nav UI.
+    this.navigation = new NavigationManager({
+      currentId: () => this.selection?.selectedId || this.rig?.focusId || 'milky-way',
+      snapshot: () => this._navSnapshot(),
+      restore: (entry) => this._navRestore(entry),
+      onTravelStart: (name) => this.navigationUi?.showTravel(name),
+      onTravelEnd: () => this.navigationUi?.hideTravel(),
+    });
+    this.navigation.seed();
+
+    this.navigationUi = new NavigationUI({
+      onBack: () => this.navigation.back(),
+      onHome: () => this.goHome(),
+      onGalaxy: () => this.focusObject('milky-way'),
+      onSystem: () => this.focusObject('solaris'),
+      onPlanets: () => this._planetsShortcut(),
+      onFocus: () => this._focusShortcut(),
+      onSearch: () => this.hud.toggleSearch(true),
+      onMode: (mode) => this._setNavMode(mode),
+      onPlanet: (id) => this.focusObject(id),
+      onNearby: (id) => this.focusObject(id),
+      onHelp: () => this.ui.openModal('helpModal'),
+    });
+    this.navigationUi.setContext('milky-way', false);
+    this.navigationUi.syncMode('orbit');
 
     window.addEventListener('keydown', (event) => this._onKeyDown(event));
   }
@@ -390,6 +425,8 @@ class Experience {
   focusObject(id) {
     const def = OBJECT_BY_ID.get(id);
     if (!def || !this.rig) return false;
+    // History records the outgoing pose before the camera starts moving.
+    this.navigation?.record(id);
     const distance = focusDistanceFor(def);
     const resolver = (out) => this.resolveWorld(id, out);
     const ok = this.rig.focusOn(id, resolver, distance);
@@ -397,6 +434,7 @@ class Experience {
       this.ui.showToast(`${def.name} is not available yet.`, 'warning', 2600);
       return false;
     }
+    this.navigation?.beginTravel(id);
     this.selection.selectId(id, (resolveId, out) => this.resolveWorld(resolveId, out));
     this.hud.setInfo(def);
     this._syncNav();
@@ -459,6 +497,103 @@ class Experience {
     this.focusObject(id === 'universe' ? 'milky-way' : id);
   }
 
+  // HOME: smooth return to the galaxy, panels closed, selection cleared.
+  goHome() {
+    this.ui.closeModal('helpModal');
+    this.ui.closeModal('settingsModal');
+    this.hud?.toggleSearch(false);
+    this.focusObject('milky-way');
+    this.targetId = null;
+    this.hud?.setTarget(null);
+    this.selection?.clear('home');
+    this.hud?.setInfo(null);
+    this._syncNav();
+  }
+
+  _planetsShortcut() {
+    if (this.navigationUi?.planetsVisible) {
+      const current = this.selection?.selectedId || this.focusId;
+      const isPlanet = current && PLANETS.some((planet) => planet.id === current);
+      this.focusObject(isPlanet ? current : 'earth');
+    } else {
+      this.focusObject('solaris');
+    }
+  }
+
+  _focusShortcut() {
+    const id = this.selection?.selectedId || this.focusId;
+    if (id) this.focusObject(id);
+    else this.ui.showToast('Select an object first — click anything in space.', 'warning', 2400);
+  }
+
+  _setNavMode(mode) {
+    if (mode === 'flight') {
+      if (this.rig?.mode !== 'flight') this.setCameraMode('flight');
+    } else if (this.rig?.mode === 'flight') {
+      this.setCameraMode('orbit');
+    }
+    this.navigationUi?.syncMode(this.rig?.mode || 'orbit');
+  }
+
+  _clearSelectionView() {
+    this.rig?.clearFocus();
+    this.selection?.clear('close');
+    this.hud?.setInfo(null);
+    this._syncNav();
+  }
+
+  // ------------------------------------------------------------------
+  // History snapshots (BACK restores the real camera pose)
+  // ------------------------------------------------------------------
+  _navSnapshot() {
+    const controls = this.controls;
+    return {
+      id: this.selection?.selectedId || this.rig?.focusId || 'milky-way',
+      focused: Boolean(this.rig?.focusId),
+      mode: this.rig?.mode || 'orbit',
+      camera: {
+        position: this.camera.position.toArray(),
+        target: controls ? controls.target.toArray() : [0, 0, 0],
+      },
+    };
+  }
+
+  _navRestore(entry) {
+    if (!entry) return;
+    const def = OBJECT_BY_ID.get(entry.id);
+
+    // Entries without a stored pose (navigation never completed) fall back
+    // to a regular cinematic focus.
+    if (!entry.camera?.position) {
+      if (def) this.focusObject(entry.id);
+      return;
+    }
+
+    this.rig?.cancelTransition();
+    this.rig?.clearFocus();
+
+    const center = this._navCenter || (this._navCenter = new THREE.Vector3());
+    center.fromArray(entry.camera.target || [0, 0, 0]);
+    this.camera.position.fromArray(entry.camera.position);
+
+    let restored = false;
+    if (entry.focused && def) {
+      restored = this.rig.focusInPlace(entry.id, (out) => this.resolveWorld(entry.id, out), focusDistanceFor(def));
+    }
+    if (!restored) {
+      this.rig.syncOrbitFrom(center);
+      this.camera.lookAt(center);
+    }
+
+    if (def) {
+      this.selection?.selectId(entry.id, (resolveId, out) => this.resolveWorld(resolveId, out));
+      this.hud?.setInfo(def);
+    }
+    this.hud?.setCameraMode(this.rig.mode, { hasFocus: this.rig.inFocus });
+    this._syncNav();
+    this.ui.showToast(`Back to ${def?.name || entry.id}`, 'info', 1700);
+  }
+
   setSimSpeed(value) {
     if (!SIM_SPEEDS.includes(value)) return;
     this.timeScale = value;
@@ -504,11 +639,14 @@ class Experience {
 
   _onFocusEnd() {
     this.focusId = null;
+    this.navigation?.endTravel();
     this.hud.setCameraMode(this.rig.mode, { hasFocus: false });
     this._syncNav();
   }
 
   _onModeChange(mode) {
+    this.navigation?.endTravel();
+    this.navigationUi?.syncMode(mode);
     this.hud.setCameraMode(mode, { hasFocus: this.rig.inFocus });
     this._syncStatus();
   }
@@ -526,6 +664,7 @@ class Experience {
   _syncNav() {
     const id = this.selection?.selectedId || this.rig?.focusId || 'milky-way';
     this.hud?.setBreadcrumb(id);
+    this.navigationUi?.setContext(id, Boolean(this.navigation?.canGoBack));
   }
 
   // ------------------------------------------------------------------
@@ -627,10 +766,7 @@ class Experience {
       return;
     }
     if (this.rig?.inFocus || this.selection?.selectedId) {
-      this.rig?.clearFocus();
-      this.selection?.clear('escape');
-      this.hud?.setInfo(null);
-      this._syncNav();
+      this._clearSelectionView();
       return;
     }
     this.controls?.reset();
@@ -725,6 +861,8 @@ class Experience {
     if (now - this._lastHudAt > 260) {
       this._lastHudAt = now;
       this.selection.hoverCheck(this.pointerClientX ?? -1, this.pointerClientY ?? -1);
+      const hoverDef = OBJECT_BY_ID.get(this.selection?.hoveredId || '');
+      this.selection.updateHover(this._objectRadius(hoverDef));
       this._updateTelemetry(effScale, effSpeed, camDist);
       this._updatePerfLine();
     }
@@ -775,6 +913,7 @@ class Experience {
       fuel: this.spacecraft.fuel,
       status,
     });
+    this.navigationUi?.setTarget(targetDef ? targetDef.name : null);
   }
 
   _updatePerfLine() {
@@ -945,6 +1084,8 @@ class Experience {
     this.ui.dom.setReducedMotion.checked = false;
     if (this.controls) this.controls.autoRotate = true;
     this.paused = false;
+    this.navigation?.clear();
+    this.navigationUi?.syncMode('orbit');
     this._syncNav();
     this._syncStatus();
     this.ui.showToast('Simulation reset to defaults.', 'info', 2400);
@@ -1051,7 +1192,8 @@ class Experience {
   }
 
   _onEnter() {
-    this.ui.showToast('Press H for the full control map, / to search objects, TAB to cycle camera modes.', 'info', 5600);
+    this.navigationUi?.showHint();
+    this.ui.showToast('Double-click any object to focus it. Use the bar at the bottom to jump between views.', 'info', 6000);
   }
 
   _syncStatus() {
