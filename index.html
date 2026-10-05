@@ -3,19 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CosmoVision — Interactive 3D Universe</title>
-  <meta name="description" content="Explore a procedural 3D galaxy using mouse, touch and real-time hand gestures." />
+  <title>CosmoVision — Space Exploration Simulator</title>
+  <meta name="description" content="Pilot a spacecraft through a procedural galaxy: explore the SOLARIS system, planets, moons, stations and wormholes with mouse, touch or hand gestures." />
   <meta name="theme-color" content="#05070f" />
   <meta name="author" content="Deepesh Chaurasia" />
   <meta name="robots" content="index, follow" />
 
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="CosmoVision — Interactive 3D Universe" />
-  <meta property="og:description" content="Explore a procedural 3D galaxy using mouse, touch and real-time hand gestures." />
+  <meta property="og:title" content="CosmoVision — Space Exploration Simulator" />
+  <meta property="og:description" content="Pilot a spacecraft through a procedural galaxy: explore planets, moons, stations and wormholes with mouse, touch or hand gestures." />
   <meta property="og:site_name" content="CosmoVision" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="CosmoVision — Interactive 3D Universe" />
-  <meta name="twitter:description" content="Explore a procedural 3D galaxy using mouse, touch and real-time hand gestures." />
+  <meta name="twitter:title" content="CosmoVision — Space Exploration Simulator" />
+  <meta name="twitter:description" content="Pilot a spacecraft through a procedural galaxy: explore planets, moons, stations and wormholes with mouse, touch or hand gestures." />
 
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="style.css" />
@@ -30,20 +30,22 @@
   </script>
 </head>
 <body>
-  <canvas id="scene" aria-label="Interactive three-dimensional galaxy rendering"></canvas>
+  <canvas id="scene" aria-label="Interactive three-dimensional space exploration simulator"></canvas>
   <div class="vignette" aria-hidden="true"></div>
 
   <div id="loader" class="overlay loader" role="status" aria-live="polite">
     <div class="loader-inner">
       <p class="brand-mark">COSMOVISION</p>
-      <p class="loader-label" id="loaderStep">Initializing universe</p>
+      <p class="brand-tagline">SPACE EXPLORATION SIMULATOR</p>
+      <p class="loader-label" id="loaderStep">Initializing renderer</p>
       <div class="loader-bar" id="loaderBar" aria-hidden="true"><span></span></div>
       <p class="loader-percent" id="loaderPercent">0%</p>
       <ul class="loader-steps" id="loaderSteps">
-        <li>Preparing particles</li>
-        <li>Initializing WebGL</li>
-        <li>Initializing gesture engine</li>
-        <li>Starting simulation</li>
+        <li>Initializing renderer</li>
+        <li>Generating galaxy</li>
+        <li>Loading solar system</li>
+        <li>Initializing navigation</li>
+        <li>Preparing spacecraft</li>
       </ul>
     </div>
   </div>
@@ -51,9 +53,10 @@
   <div id="welcome" class="overlay welcome hidden" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
     <div class="welcome-card glass">
       <p class="brand-mark small">COSMOVISION</p>
-      <h1 id="welcomeTitle">Welcome to CosmoVision</h1>
-      <p class="welcome-copy">Explore the universe with your mouse, touch or hands.</p>
-      <button id="btnEnter" class="btn btn-primary" type="button">Enter Experience</button>
+      <p class="brand-tagline small">SPACE EXPLORATION SIMULATOR</p>
+      <h1 id="welcomeTitle">Explore the universe</h1>
+      <p class="welcome-copy">Pilot a spacecraft through a procedural galaxy. Visit the SOLARIS system, land your gaze on planets and moons, dock at stations, cross wormholes — with mouse, touch or your hands.</p>
+      <button id="btnEnter" class="btn btn-primary" type="button">Enter Universe</button>
       <p class="fineprint">Hand tracking is processed locally in the browser. Camera frames are not uploaded.</p>
     </div>
   </div>
@@ -61,7 +64,7 @@
   <header class="hud-top">
     <div class="brand-block">
       <span class="brand-name">COSMOVISION</span>
-      <span class="brand-sub">Interactive 3D Universe</span>
+      <span class="brand-sub">Space Exploration Simulator</span>
     </div>
     <div class="hud-right">
       <div class="status-pill" id="statusPill" data-mode="online">
@@ -70,6 +73,9 @@
       </div>
       <span class="quality-badge" id="qualityBadge">GRAPHICS HIGH</span>
       <div class="icon-row">
+        <button class="icon-btn" id="btnSearch" type="button" aria-label="Search objects">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M15.5 14h-.8l-.3-.3a6.5 6.5 0 1 0-.7.7l.3.3v.8l5 5 1.5-1.5-5-5Zm-6 0a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9Z"/></svg>
+        </button>
         <button class="icon-btn" id="btnHelp" type="button" aria-label="Help and controls">
           <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M11 18h2v-2h-2v2Zm1-16a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16Zm-.5-13h1.5v1.5h-1.5V7Zm0 3h1.5v5h-1.5v-5Z"/></svg>
         </button>
@@ -80,17 +86,79 @@
     </div>
   </header>
 
+  <nav class="breadcrumb glass" id="breadcrumb" aria-label="Navigation path"></nav>
+
   <div class="hud-stats glass" id="hudStats" aria-label="Live telemetry">
     <div class="stat"><span class="stat-label">FPS</span><span class="stat-value" id="statFps" data-level="good">60</span></div>
     <div class="stat"><span class="stat-label">PARTICLES</span><span class="stat-value" id="statParticles">45,000</span></div>
     <div class="stat"><span class="stat-label">HANDS</span><span class="stat-value" id="statHands">0</span></div>
     <div class="stat"><span class="stat-label">GESTURE</span><span class="stat-value accent" id="statGesture">NONE</span></div>
+    <p class="perf-line" id="perfLine">FRAME — · DRAW — · TRIS — · MEM —</p>
   </div>
 
-  <aside class="panel glass" id="controlPanel" aria-label="Galaxy controls">
+  <div class="telemetry glass" id="telemetry" aria-label="Flight telemetry">
+    <div class="tele-grid">
+      <div class="tele"><span class="tele-label">VELOCITY</span><span class="tele-value" id="hudVelocity">—</span></div>
+      <div class="tele"><span class="tele-label">ALTITUDE</span><span class="tele-value" id="hudAltitude">—</span></div>
+      <div class="tele"><span class="tele-label">TARGET</span><span class="tele-value" id="hudTarget">—</span></div>
+      <div class="tele"><span class="tele-label">DISTANCE</span><span class="tele-value" id="hudDistance">—</span></div>
+      <div class="tele"><span class="tele-label">SYSTEM</span><span class="tele-value" id="hudSystem">—</span></div>
+      <div class="tele"><span class="tele-label">OBJECT</span><span class="tele-value" id="hudObject">—</span></div>
+    </div>
+    <div class="tele-fuel">
+      <span class="tele-label">FUEL</span>
+      <div class="fuel-track" aria-hidden="true"><span class="fuel-fill" id="fuelFill"></span></div>
+      <span class="tele-value small" id="fuelText">100%</span>
+    </div>
+    <p class="tele-status" id="hudStatus">STANDBY</p>
+  </div>
+
+  <div class="sim-bar glass" id="simBar">
+    <div class="sim-group">
+      <span class="sim-label" id="simSpeedLabel">SIMULATION SPEED: 1x</span>
+      <div class="segmented" id="simSpeeds" role="group" aria-label="Simulation speed">
+        <button data-sim-speed="0" type="button">Pause</button>
+        <button data-sim-speed="1" class="active" type="button">1x</button>
+        <button data-sim-speed="10" type="button">10x</button>
+        <button data-sim-speed="100" type="button">100x</button>
+        <button data-sim-speed="1000" type="button">1000x</button>
+      </div>
+    </div>
+    <div class="sim-group" id="cameraModes" role="group" aria-label="Camera mode">
+      <span class="sim-label">CAMERA</span>
+      <div class="segmented">
+        <button data-camera-mode="orbit" class="active" type="button">Orbit</button>
+        <button data-camera-mode="flight" type="button">Flight</button>
+        <button data-camera-mode="follow" type="button" disabled>Follow</button>
+        <button data-camera-mode="cinematic" type="button">Cinematic</button>
+      </div>
+    </div>
+    <div class="sim-group">
+      <button class="chip" id="btnCinematic" type="button" aria-pressed="true">Cinematic FX</button>
+      <button class="chip active" id="btnToggleMinimap" type="button" aria-pressed="true">Radar</button>
+    </div>
+  </div>
+
+  <canvas id="minimapCanvas" class="glass" width="220" height="220" aria-label="Navigation radar"></canvas>
+
+  <aside class="info-panel glass collapsed" id="infoPanel" aria-label="Selected object" aria-hidden="true">
+    <p class="panel-kicker" id="infoType">NO SELECTION</p>
+    <h2 class="info-name" id="infoName">Select an object</h2>
+    <dl class="info-rows" id="infoRows"></dl>
+    <p class="info-desc" id="infoDesc"></p>
+    <div class="info-actions">
+      <button class="btn btn-primary" id="btnFocus" type="button">Focus</button>
+      <button class="btn" id="btnExplore" type="button">Explore</button>
+      <button class="btn" id="btnTarget" type="button">Set Target</button>
+      <button class="btn btn-warn" id="btnWormholeEnter" type="button" hidden>Enter Wormhole</button>
+    </div>
+    <p class="fineprint">Body data is real astronomical data; distances are simulation-scaled.</p>
+  </aside>
+
+  <aside class="panel glass" id="controlPanel" aria-label="Universe controls">
     <div class="panel-head">
       <div>
-        <p class="panel-kicker">GALAXY CONTROLS</p>
+        <p class="panel-kicker">UNIVERSE CONTROLS</p>
         <p class="panel-title">Simulation Parameters</p>
       </div>
       <button class="icon-btn" id="btnPanelClose" type="button" aria-label="Collapse controls">
@@ -122,7 +190,7 @@
     </div>
   </aside>
 
-  <button class="panel-fab" id="btnPanelToggle" type="button" aria-expanded="false" aria-label="Toggle galaxy controls">
+  <button class="panel-fab" id="btnPanelToggle" type="button" aria-expanded="false" aria-label="Toggle universe controls">
     <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M4 7h10v2H4V7Zm0 4h16v2H4v-2Zm0 4h7v2H4v-2Zm14-3.5 3.5 3.5-3.5 3.5V15.5Z"/></svg>
   </button>
 
@@ -149,12 +217,20 @@
           <div class="help-list" data-help="mouse"></div>
         </section>
         <section>
-          <h3>Keyboard</h3>
+          <h3>Keyboard — Orbit</h3>
           <div class="help-list" data-help="keys"></div>
+        </section>
+        <section>
+          <h3>Keyboard — Flight</h3>
+          <div class="help-list" data-help="flight"></div>
         </section>
         <section>
           <h3>Hand Gestures</h3>
           <div class="help-list" data-help="gestures"></div>
+        </section>
+        <section>
+          <h3>Navigation</h3>
+          <div class="help-list" data-help="system"></div>
         </section>
       </div>
       <p class="fineprint">Hand tracking is processed locally in the browser. Camera frames are not uploaded.</p>
@@ -213,6 +289,20 @@
         </div>
       </div>
       <p class="fineprint">Preferences are stored locally in your browser.</p>
+    </div>
+  </div>
+
+  <div class="modal hidden" id="searchModal" role="dialog" aria-modal="true" aria-labelledby="searchTitle">
+    <div class="modal-card glass search-card">
+      <div class="modal-head">
+        <h2 id="searchTitle">Object Database</h2>
+        <button class="icon-btn" id="btnSearchClose" type="button" aria-label="Close search">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="m18.3 5.7-1.4-1.4L12 9.2 7.1 4.3 5.7 5.7 10.6 10.6 5.7 15.5l1.4 1.4 4.9-4.9 4.9 4.9 1.4-1.4-4.9-4.9 4.9-4.9Z"/></svg>
+        </button>
+      </div>
+      <input class="search-input" id="searchInput" type="search" placeholder="Search planets, moons, stations, wormholes…" autocomplete="off" />
+      <div class="search-results" id="searchResults"></div>
+      <p class="fineprint">Press ESC to close. Selecting an object focuses it.</p>
     </div>
   </div>
 

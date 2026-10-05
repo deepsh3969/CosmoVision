@@ -16,6 +16,9 @@ export class OrbitController {
     this.callbacks = callbacks;
 
     this.enabled = true;
+    this.active = true; // gates keyboard (false during free flight)
+    this.mouseWanted = true;
+    this.inputBlocked = false; // temporary block during camera transitions
     this.paused = false;
     this.autoRotate = true;
     this.reducedMotion = false;
@@ -116,6 +119,7 @@ export class OrbitController {
     this.onContextMenu = (event) => event.preventDefault();
 
     this.onKeyDown = (event) => {
+      if (!this.active) return;
       if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
       const key = event.key.toLowerCase();
       if (['w', 'a', 's', 'd', 'q', 'e', 'r', ' '].includes(key)) {
@@ -146,9 +150,10 @@ export class OrbitController {
   }
 
   _clampTarget() {
-    this.targetGoal.x = clamp(this.targetGoal.x, -8, 8);
-    this.targetGoal.y = clamp(this.targetGoal.y, -6, 6);
-    this.targetGoal.z = clamp(this.targetGoal.z, -8, 8);
+    const bounds = LIMITS.targetBounds;
+    this.targetGoal.x = clamp(this.targetGoal.x, -bounds.x, bounds.x);
+    this.targetGoal.y = clamp(this.targetGoal.y, -bounds.y, bounds.y);
+    this.targetGoal.z = clamp(this.targetGoal.z, -bounds.z, bounds.z);
   }
 
   reset() {
@@ -189,14 +194,16 @@ export class OrbitController {
 
     const keyboardActive = this.enabled && this.keys.size > 0;
     if (keyboardActive) {
-      const zoomStep = dt * 14;
       const rotStep = dt * 1.4;
-      if (this.keys.has('w')) this.radiusTarget = clamp(this.radiusTarget - zoomStep, LIMITS.zoom.min, LIMITS.zoom.max);
-      if (this.keys.has('s')) this.radiusTarget = clamp(this.radiusTarget + zoomStep, LIMITS.zoom.min, LIMITS.zoom.max);
+      const panStep = dt * Math.max(this.radius * 0.5, 0.03);
+      // Multiplicative zoom keeps keyboard stepping sane at every scale.
+      if (this.keys.has('w')) this.radiusTarget = clamp(this.radiusTarget * (1 - dt * 2.1), LIMITS.zoom.min, LIMITS.zoom.max);
+      if (this.keys.has('s')) this.radiusTarget = clamp(this.radiusTarget * (1 + dt * 2.1), LIMITS.zoom.min, LIMITS.zoom.max);
       if (this.keys.has('a')) this.thetaTarget -= rotStep;
       if (this.keys.has('d')) this.thetaTarget += rotStep;
-      if (this.keys.has('q')) this.targetGoal.y = clamp(this.targetGoal.y + dt * 3, -6, 6);
-      if (this.keys.has('e')) this.targetGoal.y = clamp(this.targetGoal.y - dt * 3, -6, 6);
+      const bounds = LIMITS.targetBounds;
+      if (this.keys.has('q')) this.targetGoal.y = clamp(this.targetGoal.y + panStep, -bounds.y, bounds.y);
+      if (this.keys.has('e')) this.targetGoal.y = clamp(this.targetGoal.y - panStep, -bounds.y, bounds.y);
       this.lastInteraction = performance.now();
     }
 
@@ -218,9 +225,30 @@ export class OrbitController {
     this.apply();
   }
 
+  _syncEnabled() {
+    const previous = this.enabled;
+    this.enabled = this.mouseWanted && this.active && !this.inputBlocked;
+    if (!this.enabled && previous) {
+      this.pointers.clear();
+      this.keys.clear();
+      this.isPanning = false;
+      this.pinchDistance = 0;
+    }
+  }
+
   setMouseEnabled(enabled) {
-    this.enabled = enabled;
-    if (!enabled) this.pointers.clear();
+    this.mouseWanted = enabled;
+    this._syncEnabled();
+  }
+
+  setActive(active) {
+    this.active = active;
+    this._syncEnabled();
+  }
+
+  setInputBlocked(blocked) {
+    this.inputBlocked = blocked;
+    this._syncEnabled();
   }
 
   setGestureInput({ steer = 0, zoom = 0, tilt = 0 } = {}) {

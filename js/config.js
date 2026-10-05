@@ -35,10 +35,19 @@ export const DEFAULT_AUDIO = {
 
 export const LIMITS = {
   energy: { min: 0.1, max: 1.6 },
-  zoom: { min: 6, max: 70 },
+  zoom: { min: 0.08, max: 120 },
   phi: { min: 0.12, max: 1.52 },
   galaxyScale: { min: 0.55, max: 1.75 },
   particleRange: { min: 20000, max: 60000 },
+  targetBounds: { x: 16, y: 10, z: 16 },
+};
+
+export const DEFAULT_SIM = {
+  timeScale: 1,
+  cameraMode: 'orbit', // orbit | flight | follow | cinematic
+  cinematicFx: true,
+  minimap: true,
+  fuel: 100,
 };
 
 export const COLOR_THEMES = {
@@ -203,10 +212,10 @@ export const PRESETS = {
 };
 
 export const QUALITY = {
-  low: { dpr: 1, bloom: false, particleScale: 0.55, haloScale: 0.5 },
-  medium: { dpr: 1.5, bloom: true, particleScale: 0.8, haloScale: 0.8 },
-  high: { dpr: 2, bloom: true, particleScale: 1, haloScale: 1 },
-  ultra: { dpr: 2, bloom: true, particleScale: 1, haloScale: 1 },
+  low: { dpr: 1, bloom: false, particleScale: 0.55, haloScale: 0.5, beltScale: 0.35, streaks: 0, cinematic: false },
+  medium: { dpr: 1.5, bloom: true, particleScale: 0.8, haloScale: 0.8, beltScale: 0.7, streaks: 160, cinematic: true },
+  high: { dpr: 2, bloom: true, particleScale: 1, haloScale: 1, beltScale: 1, streaks: 320, cinematic: true },
+  ultra: { dpr: 2, bloom: true, particleScale: 1, haloScale: 1, beltScale: 1.3, streaks: 480, cinematic: true },
 };
 
 export const SCHEMA = {
@@ -237,18 +246,52 @@ export const STORAGE_KEYS = {
 
 export const KEY_HINTS = [
   ['W / S', 'Zoom in / out'],
-  ['A / D', 'Rotate left / right'],
-  ['Q / E', 'Move up / down'],
+  ['A / D', 'Rotate view'],
+  ['Q / E', 'Pan view'],
   ['R', 'Reset camera'],
-  ['SPACE', 'Pause / resume'],
+  ['SPACE', 'Pause / resume simulation'],
+  ['CLICK', 'Select object'],
+  ['F', 'Focus selected'],
+  ['T', 'Set / clear target'],
+  ['ESC', 'Close panel / exit focus'],
+];
+
+export const FLIGHT_HINTS = [
+  ['W A S D', 'Spacecraft movement'],
+  ['Q / E', 'Roll'],
+  ['SHIFT', 'Boost thrust'],
+  ['SPACE', 'Brake'],
+  ['MOUSE DRAG', 'Look around'],
+  ['R', 'Reset camera'],
+];
+
+export const INTERACTION_HINTS = [
+  ['CLICK', 'Select object'],
+  ['F', 'Focus target'],
+  ['ESC', 'Close panel / exit focus'],
+  ['R', 'Reset camera'],
+  ['T', 'Set / clear target'],
+];
+
+export const SYSTEM_HINTS = [
+  ['G', 'Galaxy view'],
+  ['S', 'Solar system view'],
+  ['P', 'Planet view'],
+  ['M', 'Radar toggle'],
+  ['C', 'Cinematic FX toggle'],
+  ['H', 'Help panel'],
+  ['/', 'Search objects'],
+  ['TAB', 'Cycle camera mode'],
 ];
 
 export const GESTURE_HINTS = [
-  ['Open palm', 'Increase galaxy energy'],
-  ['Fist', 'Decrease galaxy energy'],
-  ['Index point', 'Steer galaxy rotation'],
+  ['Index point', 'Select object'],
+  ['Open palm', 'Pause / resume'],
+  ['Fist', 'Grab · steer camera'],
   ['Pinch', 'Zoom camera'],
-  ['Move hand', 'Rotate galaxy'],
-  ['Two hands apart', 'Expand galaxy'],
-  ['Two hands together', 'Compress galaxy'],
+  ['Two hands apart', 'Zoom out'],
+  ['Two hands together', 'Zoom in'],
+  ['Swipe left / right', 'Cycle navigation'],
+  ['Thumbs up', 'Confirm'],
+  ['Thumbs down', 'Cancel'],
 ];

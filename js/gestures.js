@@ -73,8 +73,11 @@ export class GestureEngine {
     this.tilt = 0;
     this.zoom = 0;
     this.expand = 0;
+    this.grab = 0;
     this.palmX = 0.5;
     this.palmY = 0.5;
+    this.selectX = 0;
+    this.selectY = 0;
 
     this.output = {
       hands: 0,
@@ -84,11 +87,28 @@ export class GestureEngine {
       tilt: 0,
       zoom: 0,
       expand: 0,
+      grab: 0,
+      action: null,
+      selectX: 0,
+      selectY: 0,
     };
 
-    this._instant = { energyRate: 0, steer: 0, tilt: 0, zoom: 0, expand: 0 };
+    this._instant = { energyRate: 0, steer: 0, tilt: 0, zoom: 0, expand: 0, grab: 0 };
+    this._pendingAction = null;
     this._previousSpread = 0;
     this._spreadVelocity = 0;
+    this._palmSince = 0;
+    this._palmFired = false;
+    this._pointSince = 0;
+    this._pointFired = false;
+    this._thumbsSince = 0;
+    this._thumbsFired = false;
+    this._lastPauseAt = 0;
+    this._lastConfirmAt = 0;
+    this._lastCancelAt = 0;
+    this._lastSelectAt = 0;
+    this._lastSwipeAt = 0;
+    this._swipeSamples = [];
     this._onStatus = () => {};
     this._onError = () => {};
   }
@@ -185,10 +205,24 @@ export class GestureEngine {
   }
 
   _resetOutput() {
-    this._instant = { energyRate: 0, steer: 0, tilt: 0, zoom: 0, expand: 0 };
-    this.output = { hands: 0, gesture: 'NONE', energyRate: 0, steer: 0, tilt: 0, zoom: 0, expand: 0 };
+    this._instant = { energyRate: 0, steer: 0, tilt: 0, zoom: 0, expand: 0, grab: 0 };
+    this.output = {
+      hands: 0,
+      gesture: 'NONE',
+      energyRate: 0,
+      steer: 0,
+      tilt: 0,
+      zoom: 0,
+      expand: 0,
+      grab: 0,
+      action: null,
+      selectX: 0,
+      selectY: 0,
+    };
+    this._pendingAction = null;
     this._spreadVelocity = 0;
     this._previousSpread = 0;
+    this._swipeSamples.length = 0;
   }
 
   _scheduleDetect() {
@@ -222,8 +256,10 @@ export class GestureEngine {
     if (hands.length === 0) {
       this.previousGesture = this.gesture;
       this.gesture = 'NONE';
-      this._instant = { energyRate: 0, steer: 0, tilt: 0, zoom: 0, expand: 0 };
+      this._instant = { energyRate: 0, steer: 0, tilt: 0, zoom: 0, expand: 0, grab: 0 };
       this.pinchStrength = damp(this.pinchStrength, 0, 8, 0.05);
+      this._resetHolds();
+      this._swipeSamples.length = 0;
       return;
     }
 
@@ -239,44 +275,116 @@ export class GestureEngine {
     this.pinchStrength = damp(this.pinchStrength, strength, 10, 0.05);
 
     const extended = extendedFingerCount(first);
+    const thumbExtended = distance2D(first[4], first[0]) / scale > 1.25;
+    const now = performance.now();
 
     let gesture = 'NEUTRAL';
     if (hands.length === 2) {
       gesture = 'TWO HANDS';
+      this._resetHolds();
+      this._swipeSamples.length = 0;
       this._handleTwoHands(hands);
     } else {
       this._instant.expand = 0;
-      if (pinchActive && extended < 3) {
+      this._instant.grab = 0;
+      const thumbDy = first[4].y - first[0].y;
+
+      if (extended === 0 && thumbExtended && Math.abs(thumbDy) > 0.08) {
+        gesture = thumbDy < 0 ? 'THUMBS UP' : 'THUMBS DOWN';
+        this._instant.steer = 0;
+        this._instant.tilt = 0;
+        this._instant.zoom = 0;
+        this._instant.energyRate = 0;
+        if (gesture === 'THUMBS UP') this._hold('thumbs', now, 450, '_lastConfirmAt', 1300, 'CONFIRM');
+        else this._hold('thumbs', now, 450, '_lastCancelAt', 900, 'CANCEL');
+        this._swipeSamples.length = 0;
+      } else if (pinchActive && extended < 3) {
         gesture = 'PINCH';
         this._instant.zoom = (0.5 - this.pinchStrength) * 1.6;
         this._instant.steer = 0;
         this._instant.tilt = 0;
         this._instant.energyRate = 0;
+        this._resetHolds();
+        this._swipeSamples.length = 0;
       } else if (extended >= 4) {
         gesture = 'OPEN PALM';
-        this._instant.energyRate = 0.55;
-        this._steerTilt(center, 0.9);
-        this._instant.zoom = 0;
-      } else if (extended === 0) {
-        gesture = 'FIST';
-        this._instant.energyRate = -0.55;
-        this._steerTilt(center, 1.1);
-        this._instant.zoom = 0;
-      } else if (extended === 1 && this._indexExtended(first)) {
-        gesture = 'POINT';
-        this._steerTilt(center, 2.2);
+        this._instant.steer = 0;
+        this._instant.tilt = 0;
         this._instant.zoom = 0;
         this._instant.energyRate = 0;
+        this._hold('palm', now, 700, '_lastPauseAt', 1500, 'PAUSE');
+        this._trackSwipe(center.x, now);
+      } else if (extended === 0 && !thumbExtended) {
+        gesture = 'FIST';
+        this._instant.grab = 1;
+        this._steerTilt(center, 1.2);
+        this._instant.zoom = 0;
+        this._instant.energyRate = 0;
+        this._resetHolds();
+        this._swipeSamples.length = 0;
+      } else if (extended === 1 && this._indexExtended(first)) {
+        gesture = 'POINT';
+        this._instant.steer = 0;
+        this._instant.tilt = 0;
+        this._instant.zoom = 0;
+        this._instant.energyRate = 0;
+        this.selectX = (1 - first[8].x) * window.innerWidth;
+        this.selectY = first[8].y * window.innerHeight;
+        this._hold('point', now, 350, '_lastSelectAt', 900, 'SELECT');
+        this._swipeSamples.length = 0;
       } else {
         gesture = 'NEUTRAL';
         this._steerTilt(center, 1.0);
         this._instant.zoom = 0;
         this._instant.energyRate = 0;
+        this._resetHolds();
+        this._trackSwipe(center.x, now);
       }
     }
 
     this.previousGesture = this.gesture;
     this.gesture = gesture;
+  }
+
+  _resetHolds() {
+    this._palmSince = 0;
+    this._palmFired = false;
+    this._pointSince = 0;
+    this._pointFired = false;
+    this._thumbsSince = 0;
+    this._thumbsFired = false;
+  }
+
+  // Hold-to-fire gesture actions with cooldowns (PAUSE / SELECT / CONFIRM / CANCEL).
+  _hold(kind, now, holdMs, lastKey, cooldownMs, action) {
+    const sinceKey = kind === 'palm' ? '_palmSince' : kind === 'point' ? '_pointSince' : '_thumbsSince';
+    const firedKey = kind === 'palm' ? '_palmFired' : kind === 'point' ? '_pointFired' : '_thumbsFired';
+    if (!this[sinceKey]) {
+      this[sinceKey] = now;
+      this[firedKey] = false;
+      return;
+    }
+    if (this[firedKey] || now - this[sinceKey] < holdMs) return;
+    if (now - this[lastKey] < cooldownMs) return;
+    this[lastKey] = now;
+    this[firedKey] = true;
+    this._pendingAction = action;
+  }
+
+  // Lateral palm swipe detection (user perspective: raw camera x decreases when swiping right).
+  _trackSwipe(x, now) {
+    this._swipeSamples.push({ x, t: now });
+    this._swipeSamples = this._swipeSamples.filter((sample) => now - sample.t < 320);
+    if (this._swipeSamples.length < 4 || now - this._lastSwipeAt < 750) return;
+    const first = this._swipeSamples[0];
+    const last = this._swipeSamples[this._swipeSamples.length - 1];
+    const dx = last.x - first.x;
+    if (Math.abs(dx) < 0.17) return;
+    this._lastSwipeAt = now;
+    this._swipeSamples.length = 0;
+    this._pendingAction = dx < 0 ? 'SWIPE_RIGHT' : 'SWIPE_LEFT';
+    this._palmSince = 0;
+    this._palmFired = false;
   }
 
   _indexExtended(landmarks) {
@@ -299,15 +407,16 @@ export class GestureEngine {
     }
     this._previousSpread = spread;
 
-    const bothPinching = hands.every((hand) => distance2D(hand[4], hand[8]) / handScale(hand) < 0.55);
     const avgX = (a.x + b.x) / 2;
     const avgY = (a.y + b.y) / 2;
 
     this._instant.expand = clamp(this._spreadVelocity * 0.5, -1.4, 1.4);
     this._instant.steer = clamp((avgX - 0.5) * -2.6, -1.8, 1.8);
     this._instant.tilt = clamp((avgY - 0.5) * 2.4, -1.4, 1.4);
-    this._instant.zoom = bothPinching ? clamp(this._spreadVelocity * 0.9, -2.4, 2.4) : 0;
+    // Hands apart → zoom out, hands together → zoom in.
+    this._instant.zoom = clamp(this._spreadVelocity * 0.85, -2.4, 2.4);
     this._instant.energyRate = 0;
+    this._instant.grab = 0;
     this.palmX = avgX;
     this.palmY = avgY;
   }
@@ -316,11 +425,16 @@ export class GestureEngine {
     const lambda = 5.5;
     this.output.hands = this.handsCount;
     this.output.gesture = this.enabled ? this.gesture : 'NONE';
+    this.output.action = this.enabled ? this._pendingAction : null;
+    this._pendingAction = null;
+    this.output.selectX = this.selectX;
+    this.output.selectY = this.selectY;
     this.output.energyRate = damp(this.output.energyRate, this._instant.energyRate, lambda, dt);
     this.output.steer = damp(this.output.steer, this._instant.steer, lambda, dt);
     this.output.tilt = damp(this.output.tilt, this._instant.tilt, lambda, dt);
     this.output.zoom = damp(this.output.zoom, this._instant.zoom, lambda, dt);
     this.output.expand = damp(this.output.expand, this._instant.expand, lambda, dt);
+    this.output.grab = damp(this.output.grab, this._instant.grab, 9, dt);
     return this.output;
   }
 

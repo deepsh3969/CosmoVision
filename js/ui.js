@@ -1,4 +1,4 @@
-import { SCHEMA, KEY_HINTS, GESTURE_HINTS, STORAGE_KEYS } from './config.js';
+import { SCHEMA, KEY_HINTS, FLIGHT_HINTS, SYSTEM_HINTS, GESTURE_HINTS, STORAGE_KEYS } from './config.js';
 import { safeStorageGet, safeStorageSet, formatNumber, clamp } from './utils.js';
 
 const STATS_INTERVAL = 250;
@@ -275,18 +275,23 @@ export class UIController {
   _buildHelpContent() {
     const mouseList = this.dom.helpModal.querySelector('[data-help="mouse"]');
     const keyList = this.dom.helpModal.querySelector('[data-help="keys"]');
+    const flightList = this.dom.helpModal.querySelector('[data-help="flight"]');
     const gestureList = this.dom.helpModal.querySelector('[data-help="gestures"]');
+    const systemList = this.dom.helpModal.querySelector('[data-help="system"]');
 
     const mouseRows = [
-      ['Drag', 'Rotate'],
-      ['Scroll', 'Zoom'],
-      ['Right drag', 'Pan'],
-      ['Touch drag', 'Rotate'],
-      ['Pinch', 'Zoom'],
+      ['Drag', 'Rotate view'],
+      ['Scroll', 'Zoom in / out'],
+      ['Right drag', 'Pan view'],
+      ['Click', 'Select object'],
+      ['Touch drag', 'Rotate view'],
+      ['Pinch', 'Zoom in / out'],
     ];
     for (const [key, action] of mouseRows) mouseList.appendChild(this._helpRow(key, action));
     for (const [key, action] of KEY_HINTS) keyList.appendChild(this._helpRow(key, action));
+    if (flightList) for (const [key, action] of FLIGHT_HINTS) flightList.appendChild(this._helpRow(key, action));
     for (const [key, action] of GESTURE_HINTS) gestureList.appendChild(this._helpRow(key, action));
+    if (systemList) for (const [key, action] of SYSTEM_HINTS) systemList.appendChild(this._helpRow(key, action));
   }
 
   _helpRow(key, action) {

@@ -1,17 +1,22 @@
 {
   "name": "cosmovision",
-  "version": "1.0.0",
-  "description": "CosmoVision — Interactive 3D Universe. A procedural galaxy experience with Three.js, WebGL and MediaPipe hand tracking.",
+  "version": "2.0.0",
+  "description": "CosmoVision — Space Exploration Simulator. Pilot a spacecraft through a procedural galaxy with planets, moons, stations, wormholes, sci-fi HUD and MediaPipe hand tracking.",
   "type": "module",
   "private": true,
   "scripts": {
     "dev": "serve . -l 4173",
-    "start": "serve . -l 4173"
+    "start": "serve . -l 4173",
+    "build": "node scripts/build.mjs"
   },
   "keywords": [
     "threejs",
     "webgl",
+    "space-simulator",
+    "spacecraft",
+    "solar-system",
     "galaxy",
+    "wormhole",
     "mediapipe",
     "hand-tracking",
     "creative-coding"

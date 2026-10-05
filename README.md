@@ -1,10 +1,10 @@
 <div align="center">
 
-# CosmoVision — Interactive 3D Universe
+# CosmoVision — Space Exploration Simulator
 
-**A cinematic, procedural galaxy you can steer with your mouse, touch and hands.**
+**Pilot a spacecraft through a procedural galaxy: explore the SOLARIS system, planets, moons, stations and wormholes with mouse, touch or hand gestures.**
 
-**[Live demo →](https://cosmovision-tau.vercel.app)** · **[Release v1.0.0](https://github.com/deepsh3969/CosmoVision/releases/tag/v1.0.0)**
+**[Live demo →](https://cosmovision-tau.vercel.app)** · **[Release v2.0.0](https://github.com/deepsh3969/CosmoVision/releases/tag/v2.0.0)** · **[v1.0.0](https://github.com/deepsh3969/CosmoVision/releases/tag/v1.0.0)**
 
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white)
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=flat-square&logo=css3&logoColor=white)
@@ -20,101 +20,120 @@
 
 ## Overview
 
-CosmoVision is a frontend-only WebGL experience that renders a 45,000+ particle spiral galaxy in real time and layers professional-grade interactivity on top of it: damped orbit controls, MediaPipe hand tracking, procedural ambient audio that drives the visuals, seven art-directed presets, and a glassmorphism HUD that stays out of the way.
+CosmoVision v2.0 turns the original cinematic galaxy into a full **space exploration simulator**. The universe now contains a procedural Milky Way, the SOLARIS star system with eight planets and their moons, asteroid belts, orbital stations, four wormholes and a flyable spacecraft — all rendered in real time in your browser with a professional sci-fi HUD on top.
 
-Everything runs in the browser. There is no backend, no API key, and no camera footage ever leaves the device.
+Everything runs client-side. There is no backend, no API key, and no camera footage ever leaves the device.
 
 ## Screenshots
 
-| Desktop | Controls |
+| Universe | SOLARIS system |
 | --- | --- |
-| ![Desktop](screenshots/galaxy-desktop.png) | ![Controls](screenshots/galaxy-controls.png) |
+| ![Universe](screenshots/v2-universe.png) | ![SOLARIS](screenshots/v2-solaris.png) |
 
-| Hand tracking | Mobile |
+| Earth — focus & selection | Wormhole transit |
 | --- | --- |
-| ![Hand tracking](screenshots/hand-tracking.png) | ![Mobile](screenshots/galaxy-mobile.png) |
+| ![Focus](screenshots/v2-focus-earth.png) | ![Wormhole](screenshots/v2-wormhole.png) |
 
-| Purple Nebula preset | Welcome |
+| Spacecraft flight | Cinematic mode |
 | --- | --- |
-| ![Purple Nebula](screenshots/preset-purple.png) | ![Welcome](screenshots/state-welcome.png) |
+| ![Flight](screenshots/v2-flight.png) | ![Cinematic](screenshots/v2-cinematic.png) |
+
+| Search database | Hand gestures |
+| --- | --- |
+| ![Search](screenshots/v2-search.png) | ![Gestures](screenshots/v2-gesture.png) |
+
+| Help & controls | Mobile |
+| --- | --- |
+| ![Help](screenshots/v2-help.png) | ![Mobile](screenshots/v2-mobile.png) |
 
 ## Features
 
-**Galaxy**
-- Procedural spiral generated from deterministic math (seeded RNG, Gaussian scatter, radial falloff, vertical thickness)
-- 20,000–60,000 particles across four layers: spiral arms, core bulge, dust lanes, floating cosmic motes
-- Differential rotation implemented in the vertex shader (inner disc turns faster than the rim)
-- Separate nebula cloud layer and a 5,000+ star deep-field background with twinkle
-- Live parameter sliders: particle count, radius, arm count, arm tightness, particle size, rotation speed, core intensity, energy
+**Procedural universe**
+- Milky Way built from deterministic math: seeded RNG, Gaussian scatter, radial falloff, differential rotation in the vertex shader, dust lanes, nebula clouds and a deep-field star background
+- SOLARIS system on a 1-unit = 1 AU scale: star, 8 planets, 4 moons, 2 asteroid belts, orbit lines and 48 orbital stations
+- Four wormholes with animated swirl discs, counter-rotating rings and transit destinations
+- Live parameter sliders (particle count, radius, arms, tightness, rotation, core intensity, energy) and seven presets: Default, Deep Space, Blue Nebula, Purple Nebula, Solar, Energy Storm, Minimal
 
-**Core object**
-- Inner glow sphere, fresnel outer shell, two counter-rotating energy rings, 1,400-particle halo, additive sprite glow
-- Pulses with energy, audio bass and camera proximity; tilts toward the pointer
+**Spacecraft**
+- Dedicated flight mode: `WASD` pitch/yaw, `Q/E` roll, `SHIFT` boost, `SPACE` brake, `R` reset
+- Fuel gauge, velocity / altitude telemetry and wormhole proximity warnings
 
-**Camera**
-- Mouse drag orbit, wheel zoom, right-drag pan, touch drag, two-finger pinch zoom
-- Keyboard: `W/S` zoom, `A/D` rotate, `Q/E` vertical, `R` reset, `SPACE` pause
-- Exponential damping on every axis plus polar/distance/target clamps so the camera never escapes the scene
+**HUD & navigation**
+- Breadcrumb trail: UNIVERSE → MILKY WAY → SOLARIS SYSTEM → object
+- Simulation speed control: Pause, 1x, 10x, 100x, 1000x
+- Camera modes: Orbit, Flight, Follow (focus), Cinematic — switchable from the top bar or `TAB`
+- Object info panel with Focus / Explore / Set Target / Enter Wormhole actions
+- Database search (`/` or `Ctrl+K`) with hierarchy-formatted results (`EARTH / SOLARIS SYSTEM / TERRESTRIAL PLANET`)
+- Radar minimap with sweep, heading cone, range rings and target ring; collapsible from `M`
+- Performance line: frame time, draw calls, triangles, memory
+
+**Focus & selection**
+- Wall-clock camera transitions to any object with follow-mode settling
+- Projected selection reticle, hover picking and one-key views: `S` system, `P` planet, `G` galaxy
 
 **Hand gestures (MediaPipe Hands, local)**
-- Two hands, 21 landmarks each, 30+ FPS throttled detection
-- Open palm → energy up, fist → energy down, index point → precision rotation, pinch → zoom
-- Hand position → galaxy rotation / vertical tilt
-- Two-hand spread → expand & compress the galaxy, two-hand pinch → advanced zoom
-- Overlay renders landmarks, connections, fingertips, bounding box and the live gesture name
-- Every raw value passes through damping before it reaches the scene
+- Open palm (hold) → pause/resume · Point (hold) → select under cursor · Fist → grab steering
+- Pinch → zoom · Two-hand spread → velocity zoom · Swipe → next/previous camera mode
+- Thumbs up → confirm · Thumbs down → cancel · landmark overlay and live gesture tag
 
-**Audio**
-- Procedural Web Audio ambient drone (never autoplays — starts on your click)
-- FFT analysis splits bass / mids / highs: bass drives scale, mids drive brightness, highs drive twinkle
-- Volume slider and reactivity toggle
-
-**Interface**
-- Collapsible control panel with Galaxy / Visuals / Interaction / Audio tabs
-- Seven presets: Default, Deep Space, Blue Nebula, Purple Nebula, Solar, Energy Storm, Minimal + Reset
-- Settings: graphics quality (Auto/Low/Medium/High/Ultra), particle budget, post-processing, gesture tracking, audio, reduced motion
-- Cinematic loading sequence, first-visit welcome, help modal, toast notifications
-- HUD telemetry: FPS, particle count, hands tracked, active gesture
-- Keyboard accessible, ARIA-labelled, honours `prefers-reduced-motion`
+**Interface & audio**
+- Five-stage cinematic loader, first-visit welcome, toast notifications
+- Help modal with five sections: Mouse / Orbit keys / Flight keys / Gestures / Navigation
+- Settings: graphics quality, particle budget, post-processing, gesture tracking, audio, reduced motion
+- Procedural Web Audio ambient drone with FFT-reactive visuals and volume / reactivity controls
+- Responsive layout down to 390 px with a floating panel toggle; keyboard accessible, ARIA-labelled, honours `prefers-reduced-motion`
 
 **Performance & resilience**
-- Single `BufferGeometry` per layer with typed arrays, one draw call per layer, `devicePixelRatio` capped per quality tier
-- Adaptive degradation: sustained low FPS steps down resolution, particle scale and bloom automatically
-- Preferences and panel state persist in `localStorage`
-- Friendly recovery paths for missing WebGL, denied camera, failed MediaPipe load and unsupported audio — the galaxy always keeps running in mouse mode
+- Single `BufferGeometry` per layer, one draw call per layer, capped `devicePixelRatio` per quality tier
+- Adaptive degradation steps down resolution, particle scale and bloom when FPS sags
+- Preferences persist in `localStorage`; friendly recovery paths for missing WebGL, denied camera, failed MediaPipe load and unsupported audio — the universe always keeps running in mouse mode
 
 ## Technologies
 
 | Layer | Choice |
 | --- | --- |
-| Markup / style / logic | HTML5, CSS3, vanilla ES modules |
-| Rendering | Three.js 0.166 (WebGL2), custom GLSL `ShaderMaterial`, `UnrealBloomPass` post-processing |
+| Markup / style / logic | HTML5, CSS3, vanilla ES modules (no bundler) |
+| Rendering | Three.js 0.166 (WebGL2), custom GLSL `ShaderMaterial`, `UnrealBloomPass` + lens/chromatic-warp pass |
 | Hand tracking | `@mediapipe/tasks-vision` HandLandmarker (GPU delegate, CPU fallback) |
 | Audio | Web Audio API — procedural synthesis + `AnalyserNode` |
-| Tooling | `serve` for local development, static deployment on Vercel |
+| Tooling | `serve` for development, `scripts/build.mjs` static export, static deployment on Vercel |
 
 ## Architecture
 
 ```text
 CosmoVision/
 ├── index.html          entry, import map, SEO/OG metadata, HUD markup
-├── style.css           design system, glassmorphism HUD, responsive layout
-├── script.js           Experience orchestrator: boot stages, render loop, wiring
+├── style.css           design system, sci-fi HUD, responsive layout
+├── script.js           Experience orchestrator: boot stages, render loop, navigation, gestures
 ├── js/
-│   ├── config.js       defaults, presets, colour themes, quality tiers, UI schema
+│   ├── config.js       defaults, presets, quality tiers, hint tables, UI schema
 │   ├── utils.js        seeded RNG, damping, easing, glow texture, storage helpers
+│   ├── data/
+│   │   └── celestialObjects.js   object database, scales, distances, breadcrumb paths
 │   ├── galaxy.js       procedural particle generation + point shaders
 │   ├── starfield.js    deep-field background stars
-│   ├── core.js         central core: spheres, rings, halo, sprite glow
+│   ├── core.js         galactic core: spheres, rings, halo, sprite glow
+│   ├── solarSystem.js  star, planets, moons, atmosphere shells, orbit lines
+│   ├── asteroids.js    procedural belt meshes + drift
+│   ├── stations.js     orbital stations with blinking beacons
+│   ├── wormholes.js    swirl disc, rings, glow, proximity warp pulse
+│   ├── spacecraft.js   flight controller, boost, fuel, telemetry
+│   ├── cameraRig.js    focus transitions, follow mode, view presets
+│   ├── selection.js    hover picking, projected reticle, target ring
+│   ├── hud.js          breadcrumb, telemetry, sim-speed, info panel, search
+│   ├── minimap.js      radar canvas: sweep, rings, contacts, target marker
+│   ├── effects.js      trail, warp pulse, particles, toasts
+│   ├── textures.js     procedural sprite textures
 │   ├── controls.js     damped orbit/zoom/pan controller (mouse, touch, keyboard)
-│   ├── gestures.js     MediaPipe engine, gesture grammar, overlay renderer
+│   ├── gestures.js     MediaPipe engine, action grammar, overlay renderer
 │   ├── audio.js        procedural ambient synth + frequency band analysis
-│   ├── postfx.js       EffectComposer / bloom / output pass wrapper
+│   ├── postfx.js       EffectComposer: bloom, lens warp, chromatic aberration
 │   ├── performance.js  FPS monitor, quality profiles, adaptive degradation
-│   └── ui.js           HUD, panels, modals, toasts, persistence
+│   └── ui.js           panels, modals, toasts, persistence
+├── scripts/build.mjs   static export → public/ (used by Vercel)
 ├── assets/             favicon, audio, textures
 ├── screenshots/        store-ready captures
-├── package.json        `npm run dev`
+├── package.json        npm run dev / start / build
 └── .gitignore
 ```
 
@@ -122,30 +141,53 @@ Each subsystem owns its state and exposes a small `update(...)`/`dispose(...)` s
 
 ## Controls
 
-**Mouse / touch** — drag to orbit, scroll or pinch to zoom, right-drag to pan.
+**Mouse / touch** — drag to orbit, scroll or pinch to zoom, right-drag to pan, click to select, double-click to focus.
 
-**Keyboard**
+**Orbit**
 
 | Key | Action |
 | --- | --- |
 | `W` / `S` | Zoom in / out |
 | `A` / `D` | Rotate left / right |
-| `Q` / `E` | Move view up / down |
+| `Q` / `E` | Pan view up / down |
 | `R` | Reset camera |
-| `SPACE` | Pause / resume |
-| `?` | Open help |
+| `SPACE` | Pause / resume simulation |
 
-**Gesture**
+**Flight**
 
-| Gesture | Effect |
+| Key | Action |
 | --- | --- |
-| Open palm | Increase galaxy energy |
-| Fist | Decrease galaxy energy |
-| Index point | Steer galaxy rotation |
-| Pinch | Zoom camera |
-| Move hand | Rotate / tilt galaxy |
-| Two hands apart | Expand galaxy |
-| Two hands together | Compress galaxy |
+| `W` / `S` | Pitch down / up |
+| `A` / `D` | Yaw left / right |
+| `Q` / `E` | Roll left / right |
+| `SHIFT` | Boost |
+| `SPACE` | Brake |
+| `R` | Reset flight |
+
+**System**
+
+| Key | Action |
+| --- | --- |
+| `/` or `Ctrl+K` | Search database |
+| `TAB` | Cycle camera mode (Orbit → Flight → Follow → Cinematic) |
+| `ESC` | Close modal / search / exit flight / clear focus |
+| `S` / `P` / `G` | Focus system / planet / galaxy |
+| `T` | Toggle target lock |
+| `C` / `F` / `M` | Cinematic FX / focus mode toggle / radar |
+| `H` / `?` | Help |
+
+**Gestures**
+
+| Gesture | Action |
+| --- | --- |
+| Point (hold 350 ms) | Select object under cursor |
+| Open palm (hold 700 ms) | Pause / resume |
+| Fist | Grab steering |
+| Pinch | Zoom in / out |
+| Two-hand spread | Velocity zoom |
+| Swipe left / right | Next / previous camera mode |
+| Thumbs up | Confirm |
+| Thumbs down | Cancel |
 
 ## Installation
 
@@ -163,16 +205,20 @@ npm run dev
 
 Serves the project at `http://localhost:4173`. A static server is required — ES modules do not load over `file://`.
 
-## Deployment
+## Build & deployment
 
-The project is fully static. Deploy the repository root to Vercel (framework preset: **Other**), or from the CLI:
+The project is fully static. Vercel runs the build automatically:
 
 ```bash
-npm i -g vercel
-vercel --prod
+npm run build        # exports index.html, style.css, script.js, js/, assets/ → public/
+vercel --prod        # output directory: public, framework preset: Other
 ```
 
-No environment variables, build step or database is required. Camera access requires HTTPS, which Vercel provides by default.
+No environment variables or database are required. Camera access requires HTTPS, which Vercel provides by default.
+
+## Verification
+
+An automated 30-step Puppeteer suite covers boot, scene graph, HUD, radar, camera modes, search-to-focus flow, wormhole transit, keyboard views, simulation speeds, flight, cinematic toggle, help, presets, sliders, settings, audio, post-processing, gestures, responsive layout and reset — with zero console errors.
 
 ## Browser requirements
 
@@ -183,22 +229,6 @@ No environment variables, build step or database is required. Camera access requ
 ## Privacy
 
 Hand tracking runs entirely in your browser through MediaPipe. **Camera frames are never uploaded, recorded or transmitted.** CosmoVision has no backend: no analytics, no accounts, no cookies. Only your UI preferences are stored, in your own `localStorage`.
-
-## Performance
-
-- 60 FPS target on discrete GPUs at 45K particles with bloom
-- Three to four draw calls for the entire scene; no per-particle meshes or DOM nodes
-- Quality tiers scale pixel ratio (1.0–2.0), particle budget and bloom
-- Mobile and low-memory devices start on reduced particles and auto-tune down if FPS sags
-- MediaPipe detection is throttled to ~30 FPS and pauses when the tab is hidden
-
-## Roadmap
-
-- Color-graded LUT presets per theme
-- Exportable screenshot / time-lapse mode
-- WebXR viewing mode
-- Optional comet and satellite passes
-- MIDI / beat-sync audio input
 
 ## Author
 
