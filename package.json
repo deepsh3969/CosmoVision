@@ -1,29 +1,49 @@
 {
   "name": "cosmovision",
-  "version": "2.0.0",
-  "description": "CosmoVision — Space Exploration Simulator. Pilot a spacecraft through a procedural galaxy with planets, moons, stations, wormholes, sci-fi HUD and MediaPipe hand tracking.",
+  "version": "3.0.0",
+  "description": "CosmoVision — Explore the Universe. Discover the Unknown. Interactive 3D space exploration and universe simulation platform built with React, TypeScript, Three.js and React Three Fiber.",
   "type": "module",
   "private": true,
-  "scripts": {
-    "dev": "serve . -l 4173",
-    "start": "serve . -l 4173",
-    "build": "node scripts/build.mjs"
-  },
+  "license": "MIT",
+  "author": "Deepesh Chaurasia",
   "keywords": [
     "threejs",
+    "react-three-fiber",
     "webgl",
-    "space-simulator",
-    "spacecraft",
-    "solar-system",
-    "galaxy",
-    "wormhole",
-    "mediapipe",
-    "hand-tracking",
-    "creative-coding"
+    "space",
+    "astronomy",
+    "simulation",
+    "typescript"
   ],
-  "author": "Deepesh Chaurasia",
-  "license": "MIT",
+  "scripts": {
+    "dev": "vite",
+    "start": "vite preview --port 4173 --strictPort",
+    "build": "vite build",
+    "preview": "vite preview --port 4173 --strictPort",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "node tests/e2e/run.mjs",
+    "verify": "npm run typecheck && npm run test && npm run build && npm run test:e2e"
+  },
+  "dependencies": {
+    "@react-three/drei": "^10.7.9",
+    "@react-three/fiber": "^9.8.1",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "recharts": "^3.10.1",
+    "three": "^0.186.1",
+    "zustand": "^5.0.15"
+  },
   "devDependencies": {
-    "serve": "^14.2.4"
+    "@types/node": "^26.6.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@types/three": "^0.186.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "puppeteer-core": "^25.13.0",
+    "typescript": "^5.9.3",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.3"
   }
 }

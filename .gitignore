@@ -1,4 +1,5 @@
 node_modules/
+dist/
 .env
 .env.local
 .DS_Store
@@ -7,7 +8,7 @@ Thumbs.db
 .idea/
 .vercel/
 *.log
-public/
+coverage/
 
 .vercel
 .env*

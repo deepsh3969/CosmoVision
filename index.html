@@ -1,371 +1,78 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CosmoVision — Space Exploration Simulator</title>
-  <meta name="description" content="Pilot a spacecraft through a procedural galaxy: explore the SOLARIS system, planets, moons, stations and wormholes with mouse, touch or hand gestures." />
-  <meta name="theme-color" content="#05070f" />
-  <meta name="author" content="Deepesh Chaurasia" />
-  <meta name="robots" content="index, follow" />
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>CosmoVision — Explore the Universe. Discover the Unknown.</title>
+    <meta
+      name="description"
+      content="CosmoVision is an interactive 3D space exploration platform: navigate a procedural galaxy, visit the Sun and its planets, inspect moons and asteroid belts, run a time simulation and read source-backed astronomy data."
+    />
+    <meta name="theme-color" content="#05070f" />
+    <meta name="author" content="Deepesh Chaurasia" />
+    <meta name="robots" content="index, follow" />
 
-  <meta property="og:type" content="website" />
-  <meta property="og:title" content="CosmoVision — Space Exploration Simulator" />
-  <meta property="og:description" content="Pilot a spacecraft through a procedural galaxy: explore planets, moons, stations and wormholes with mouse, touch or hand gestures." />
-  <meta property="og:site_name" content="CosmoVision" />
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="CosmoVision — Space Exploration Simulator" />
-  <meta name="twitter:description" content="Pilot a spacecraft through a procedural galaxy: explore planets, moons, stations and wormholes with mouse, touch or hand gestures." />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="CosmoVision — Explore the Universe. Discover the Unknown." />
+    <meta
+      property="og:description"
+      content="Interactive 3D space exploration and universe simulation platform built with React, TypeScript and Three.js."
+    />
+    <meta property="og:site_name" content="CosmoVision" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="CosmoVision — Explore the Universe. Discover the Unknown." />
 
-  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="style.css" />
-
-  <script type="importmap">
-    {
-      "imports": {
-        "three": "https://cdn.jsdelivr.net/npm/three@0.166.1/build/three.module.js",
-        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.166.1/examples/jsm/"
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "CosmoVision",
+        "applicationCategory": "EducationalApplication",
+        "operatingSystem": "Any modern browser with WebGL2",
+        "offers": { "@type": "Offer", "price": "0" }
       }
-    }
-  </script>
-</head>
-<body>
-  <canvas id="scene" aria-label="Interactive three-dimensional space exploration simulator"></canvas>
-  <div class="vignette" aria-hidden="true"></div>
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
 
-  <div id="loader" class="overlay loader" role="status" aria-live="polite">
-    <div class="loader-inner">
-      <p class="brand-mark">COSMOVISION</p>
-      <p class="brand-tagline">SPACE EXPLORATION SIMULATOR</p>
-      <p class="loader-label" id="loaderStep">Initializing renderer</p>
-      <div class="loader-bar" id="loaderBar" aria-hidden="true"><span></span></div>
-      <p class="loader-percent" id="loaderPercent">0%</p>
-      <ul class="loader-steps" id="loaderSteps">
-        <li>Initializing renderer</li>
-        <li>Generating galaxy</li>
-        <li>Loading solar system</li>
-        <li>Initializing navigation</li>
-        <li>Preparing spacecraft</li>
-      </ul>
-    </div>
-  </div>
+    <noscript>
+      <main class="noscript-fallback">
+        <h1>CosmoVision — Explore the Universe. Discover the Unknown.</h1>
+        <p>
+          The interactive 3D universe requires JavaScript and WebGL2. The essential object data is listed below so the
+          information stays readable without them. Distances are mean heliocentric distances; diameters are mean
+          geometric diameters. Source: NASA planetary fact sheets.
+        </p>
+        <table>
+          <caption>Solar System objects</caption>
+          <thead>
+            <tr>
+              <th scope="col">Object</th>
+              <th scope="col">Type</th>
+              <th scope="col">Mean diameter</th>
+              <th scope="col">Distance from Sun</th>
+              <th scope="col">Orbital period</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><th scope="row">Sol</th><td>G-type star</td><td>1,392,700 km</td><td>—</td><td>—</td></tr>
+            <tr><th scope="row">Mercury</th><td>Terrestrial planet</td><td>4,879 km</td><td>0.39 AU</td><td>88 days</td></tr>
+            <tr><th scope="row">Venus</th><td>Terrestrial planet</td><td>12,104 km</td><td>0.72 AU</td><td>224.7 days</td></tr>
+            <tr><th scope="row">Earth</th><td>Terrestrial planet</td><td>12,756 km</td><td>1.00 AU</td><td>365.25 days</td></tr>
+            <tr><th scope="row">Mars</th><td>Terrestrial planet</td><td>6,792 km</td><td>1.52 AU</td><td>687 days</td></tr>
+            <tr><th scope="row">Jupiter</th><td>Gas giant</td><td>142,984 km</td><td>5.20 AU</td><td>11.9 years</td></tr>
+            <tr><th scope="row">Saturn</th><td>Gas giant</td><td>120,536 km</td><td>9.58 AU</td><td>29.5 years</td></tr>
+            <tr><th scope="row">Uranus</th><td>Ice giant</td><td>51,118 km</td><td>19.2 AU</td><td>84 years</td></tr>
+            <tr><th scope="row">Neptune</th><td>Ice giant</td><td>49,528 km</td><td>30.1 AU</td><td>165 years</td></tr>
+            <tr><th scope="row">Luna</th><td>Moon of Earth</td><td>3,475 km</td><td>0.00257 AU from Earth</td><td>27.3 days</td></tr>
+          </tbody>
+        </table>
+        <p>Documentation: README.md, docs/SCIENCE.md and docs/CONTROLS.md in the project repository.</p>
+      </main>
+    </noscript>
 
-  <div id="welcome" class="overlay welcome hidden" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
-    <div class="welcome-card glass">
-      <p class="brand-mark small">COSMOVISION</p>
-      <p class="brand-tagline small">SPACE EXPLORATION SIMULATOR</p>
-      <h1 id="welcomeTitle">Welcome to CosmoVision</h1>
-      <p class="welcome-copy">Point, click and explore the universe — no flight training required.</p>
-      <ul class="welcome-gestures" aria-label="How to explore">
-        <li><span class="wg-icon" aria-hidden="true">✥</span><span>Drag to rotate</span></li>
-        <li><span class="wg-icon" aria-hidden="true">⌕</span><span>Scroll to zoom</span></li>
-        <li><span class="wg-icon" aria-hidden="true">☝</span><span>Click to select</span></li>
-        <li><span class="wg-icon" aria-hidden="true">✦</span><span>Double-click to focus</span></li>
-      </ul>
-      <button id="btnEnter" class="btn btn-primary" type="button">Start Exploring</button>
-      <p class="fineprint">Hand tracking is processed locally in the browser. Camera frames are not uploaded.</p>
-    </div>
-  </div>
-
-  <header class="hud-top">
-    <div class="brand-block">
-      <span class="brand-name">COSMOVISION</span>
-      <span class="brand-sub">Space Exploration Simulator</span>
-    </div>
-    <div class="hud-right">
-      <div class="status-pill" id="statusPill" data-mode="online">
-        <span class="status-dot" aria-hidden="true"></span>
-        <span id="statusText">SYSTEM ONLINE</span>
-      </div>
-      <span class="quality-badge" id="qualityBadge">GRAPHICS HIGH</span>
-      <div class="icon-row">
-        <button class="icon-btn" id="btnSearch" type="button" aria-label="Search objects">
-          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M15.5 14h-.8l-.3-.3a6.5 6.5 0 1 0-.7.7l.3.3v.8l5 5 1.5-1.5-5-5Zm-6 0a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9Z"/></svg>
-        </button>
-        <button class="icon-btn" id="btnHelp" type="button" aria-label="Help and controls">
-          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M11 18h2v-2h-2v2Zm1-16a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16Zm-.5-13h1.5v1.5h-1.5V7Zm0 3h1.5v5h-1.5v-5Z"/></svg>
-        </button>
-        <button class="icon-btn" id="btnSettings" type="button" aria-label="Settings">
-          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.8 7.8 0 0 0 .1-1 7.8 7.8 0 0 0-.1-1l2-1.6a.5.5 0 0 0 .1-.6l-1.9-3.3a.5.5 0 0 0-.6-.2l-2.4 1a7.7 7.7 0 0 0-1.7-1l-.4-2.5a.5.5 0 0 0-.5-.4h-3.8a.5.5 0 0 0-.5.4l-.4 2.5a7.7 7.7 0 0 0-1.7 1l-2.4-1a.5.5 0 0 0-.6.2L2.7 8.8a.5.5 0 0 0 .1.6L4.8 11a7.8 7.8 0 0 0 0 2l-2 1.6a.5.5 0 0 0-.1.6l1.9 3.3c.1.2.4.3.6.2l2.4-1a7.7 7.7 0 0 0 1.7 1l.4 2.5c0 .2.2.4.5.4h3.8c.3 0 .5-.2.5-.4l.4-2.5a7.7 7.7 0 0 0 1.7-1l2.4 1c.2.1.5 0 .6-.2l1.9-3.3a.5.5 0 0 0-.1-.6L19.4 13ZM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z"/></svg>
-        </button>
-      </div>
-    </div>
-  </header>
-
-  <nav class="breadcrumb glass" id="breadcrumb" aria-label="Navigation path"></nav>
-
-  <div class="hud-stats glass" id="hudStats" aria-label="Live telemetry">
-    <div class="stat"><span class="stat-label">FPS</span><span class="stat-value" id="statFps" data-level="good">60</span></div>
-    <div class="stat"><span class="stat-label">PARTICLES</span><span class="stat-value" id="statParticles">45,000</span></div>
-    <div class="stat"><span class="stat-label">HANDS</span><span class="stat-value" id="statHands">0</span></div>
-    <div class="stat"><span class="stat-label">GESTURE</span><span class="stat-value accent" id="statGesture">NONE</span></div>
-    <p class="perf-line" id="perfLine">FRAME — · DRAW — · TRIS — · MEM —</p>
-  </div>
-
-  <div class="telemetry glass" id="telemetry" aria-label="Flight telemetry">
-    <div class="tele-grid">
-      <div class="tele"><span class="tele-label">VELOCITY</span><span class="tele-value" id="hudVelocity">—</span></div>
-      <div class="tele"><span class="tele-label">ALTITUDE</span><span class="tele-value" id="hudAltitude">—</span></div>
-      <div class="tele"><span class="tele-label">TARGET</span><span class="tele-value" id="hudTarget">—</span></div>
-      <div class="tele"><span class="tele-label">DISTANCE</span><span class="tele-value" id="hudDistance">—</span></div>
-      <div class="tele"><span class="tele-label">SYSTEM</span><span class="tele-value" id="hudSystem">—</span></div>
-      <div class="tele"><span class="tele-label">OBJECT</span><span class="tele-value" id="hudObject">—</span></div>
-    </div>
-    <div class="tele-fuel">
-      <span class="tele-label">FUEL</span>
-      <div class="fuel-track" aria-hidden="true"><span class="fuel-fill" id="fuelFill"></span></div>
-      <span class="tele-value small" id="fuelText">100%</span>
-    </div>
-    <p class="tele-status" id="hudStatus">STANDBY</p>
-  </div>
-
-  <div class="sim-bar glass" id="simBar">
-    <div class="sim-group">
-      <span class="sim-label" id="simSpeedLabel">SIMULATION SPEED: 1x</span>
-      <div class="segmented" id="simSpeeds" role="group" aria-label="Simulation speed">
-        <button data-sim-speed="0" type="button">Pause</button>
-        <button data-sim-speed="1" class="active" type="button">1x</button>
-        <button data-sim-speed="10" type="button">10x</button>
-        <button data-sim-speed="100" type="button">100x</button>
-        <button data-sim-speed="1000" type="button">1000x</button>
-      </div>
-    </div>
-    <div class="sim-group" id="cameraModes" role="group" aria-label="Camera mode">
-      <span class="sim-label">CAMERA</span>
-      <div class="segmented">
-        <button data-camera-mode="orbit" class="active" type="button">Orbit</button>
-        <button data-camera-mode="flight" type="button">Flight</button>
-        <button data-camera-mode="follow" type="button" disabled>Follow</button>
-        <button data-camera-mode="cinematic" type="button">Cinematic</button>
-      </div>
-    </div>
-    <div class="sim-group">
-      <button class="chip" id="btnCinematic" type="button" aria-pressed="true">Cinematic FX</button>
-      <button class="chip active" id="btnToggleMinimap" type="button" aria-pressed="true">Radar</button>
-    </div>
-  </div>
-
-  <canvas id="minimapCanvas" class="glass" width="220" height="220" aria-label="Navigation radar"></canvas>
-
-  <div class="nav-stack" id="navStack">
-    <div class="nav-travel glass hidden" id="navTravel" role="status" aria-live="polite"></div>
-
-    <div class="nav-hint glass hidden" id="navHint" role="note">
-      <span class="nav-hint-text">Drag to rotate · Scroll to zoom · Click an object to explore</span>
-      <button class="nav-hint-help" id="navHintHelp" type="button" aria-label="Help and controls" title="Help and controls">? Help</button>
-    </div>
-
-    <div class="nav-readout glass" id="navReadout" aria-label="Navigation status">
-      <span class="nav-readout-slot"><b>Location</b><i id="navLocation">MILKY WAY</i></span>
-      <span class="nav-readout-div" aria-hidden="true"></span>
-      <span class="nav-readout-slot"><b>Target</b><i id="navTarget">NONE</i></span>
-    </div>
-
-    <div class="nav-planets glass hidden" id="navPlanetBar" aria-label="SOLARIS planet browser">
-      <span class="nav-strip-label">Planets</span>
-      <div class="nav-planet-list" id="navPlanetList" role="group" aria-label="Planets"></div>
-      <div class="nav-strip-nav">
-        <button class="nav-mini" id="navPrevPlanet" type="button" aria-label="Previous planet" title="Previous planet">◀</button>
-        <button class="nav-mini" id="navNextPlanet" type="button" aria-label="Next planet" title="Next planet">▶</button>
-      </div>
-    </div>
-
-    <div class="nav-nearby glass hidden" id="navNearby" aria-label="Nearby objects">
-      <span class="nav-strip-label">Nearby</span>
-      <div class="nav-nearby-list" id="navNearbyList"></div>
-    </div>
-  </div>
-
-  <nav class="nav-dock glass" id="navDock" aria-label="Primary navigation">
-    <div class="nav-dock-row">
-      <button class="nav-btn" id="navBack" type="button" title="Back to the previous view" aria-label="Back to the previous view" disabled>← Back</button>
-      <button class="nav-btn" id="navHome" type="button" title="Home — return to the galaxy" aria-label="Home, galaxy view">⌂ Home</button>
-      <button class="nav-btn" id="navGalaxy" type="button" title="Milky Way galaxy view" aria-label="Galaxy view">🌌 Galaxy</button>
-      <button class="nav-btn" id="navSystem" type="button" title="SOLARIS solar system view" aria-label="Solar system view">☀ Solar System</button>
-    </div>
-    <div class="nav-dock-row">
-      <button class="nav-btn" id="navPlanets" type="button" title="Browse the planets" aria-label="Planet browser">🪐 Planets</button>
-      <button class="nav-btn" id="navFocus" type="button" title="Focus the selected object" aria-label="Focus selected object">🎯 Focus</button>
-      <div class="nav-mode segmented" id="navMode" role="group" aria-label="Navigation mode">
-        <button data-nav-mode="easy" class="active" type="button" aria-pressed="true" title="Easy mode — point and click navigation">Easy Mode ✓</button>
-        <button data-nav-mode="flight" type="button" aria-pressed="false" title="Space flight — advanced free-flight piloting">Space Flight</button>
-      </div>
-      <button class="nav-btn" id="navSearch" type="button" title="Search objects" aria-label="Search objects">⌕ Search</button>
-    </div>
-  </nav>
-
-  <aside class="info-panel glass collapsed" id="infoPanel" aria-label="Selected object" aria-hidden="true">
-    <p class="panel-kicker" id="infoType">NO SELECTION</p>
-    <h2 class="info-name" id="infoName">Select an object</h2>
-    <dl class="info-rows" id="infoRows"></dl>
-    <p class="info-desc" id="infoDesc"></p>
-    <div class="info-actions">
-      <button class="btn btn-primary" id="btnFocus" type="button">Focus</button>
-      <button class="btn" id="btnExplore" type="button">Explore</button>
-      <button class="btn" id="btnTarget" type="button">Set Target</button>
-      <button class="btn" id="btnCloseInfo" type="button">Close</button>
-      <button class="btn btn-warn" id="btnWormholeEnter" type="button" hidden>Enter Wormhole</button>
-    </div>
-    <p class="fineprint">Body data is real astronomical data; distances are simulation-scaled.</p>
-  </aside>
-
-  <aside class="panel glass" id="controlPanel" aria-label="Universe controls">
-    <div class="panel-head">
-      <div>
-        <p class="panel-kicker">UNIVERSE CONTROLS</p>
-        <p class="panel-title">Simulation Parameters</p>
-      </div>
-      <button class="icon-btn" id="btnPanelClose" type="button" aria-label="Collapse controls">
-        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="m15.5 12-6-6-.7.7 5.3 5.3-5.3 5.3.7.7 6-6Z"/></svg>
-      </button>
-    </div>
-
-    <div class="panel-tabs" id="panelTabs" role="tablist" aria-label="Control categories">
-      <button role="tab" data-tab="galaxy" aria-selected="true" type="button">Galaxy</button>
-      <button role="tab" data-tab="visuals" aria-selected="false" tabindex="-1" type="button">Visuals</button>
-      <button role="tab" data-tab="interaction" aria-selected="false" tabindex="-1" type="button">Interaction</button>
-      <button role="tab" data-tab="audio" aria-selected="false" tabindex="-1" type="button">Audio</button>
-    </div>
-
-    <div class="panel-body" id="panelBody"></div>
-
-    <div class="panel-footer">
-      <p class="panel-kicker">PRESETS</p>
-      <div class="presets" id="presets">
-        <button class="chip active" data-preset="DEFAULT" type="button">Default</button>
-        <button class="chip" data-preset="DEEP SPACE" type="button">Deep Space</button>
-        <button class="chip" data-preset="BLUE NEBULA" type="button">Blue Nebula</button>
-        <button class="chip" data-preset="PURPLE NEBULA" type="button">Purple Nebula</button>
-        <button class="chip" data-preset="SOLAR" type="button">Solar</button>
-        <button class="chip" data-preset="ENERGY STORM" type="button">Energy Storm</button>
-        <button class="chip" data-preset="MINIMAL" type="button">Minimal</button>
-      </div>
-      <button class="btn btn-ghost" id="btnReset" type="button">Reset</button>
-    </div>
-  </aside>
-
-  <button class="panel-fab" id="btnPanelToggle" type="button" aria-expanded="false" aria-label="Toggle universe controls">
-    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M4 7h10v2H4V7Zm0 4h16v2H4v-2Zm0 4h7v2H4v-2Zm14-3.5 3.5 3.5-3.5 3.5V15.5Z"/></svg>
-  </button>
-
-  <div class="hand-preview glass hidden" id="handPreview">
-    <video id="handVideo" playsinline muted autoplay aria-hidden="true"></video>
-    <canvas id="handOverlay"></canvas>
-    <div class="hand-meta">
-      <span class="gesture-tag" id="gestureTag">NONE</span>
-      <span class="privacy-note" id="privacyNote">Processed locally</span>
-    </div>
-  </div>
-
-  <div class="modal hidden" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
-    <div class="modal-card glass">
-      <div class="modal-head">
-        <h2 id="helpTitle">Controls</h2>
-        <button class="icon-btn" id="btnCloseHelp" type="button" aria-label="Close help">
-          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="m18.3 5.7-1.4-1.4L12 9.2 7.1 4.3 5.7 5.7 10.6 10.6 5.7 15.5l1.4 1.4 4.9-4.9 4.9 4.9 1.4-1.4-4.9-4.9 4.9-4.9Z"/></svg>
-        </button>
-      </div>
-      <div class="modal-grid">
-        <section>
-          <h3>Mouse / Touch</h3>
-          <div class="help-list" data-help="mouse"></div>
-        </section>
-        <section>
-          <h3>Keyboard — Orbit</h3>
-          <div class="help-list" data-help="keys"></div>
-        </section>
-        <section>
-          <h3>Keyboard — Flight</h3>
-          <div class="help-list" data-help="flight"></div>
-        </section>
-        <section>
-          <h3>Hand Gestures</h3>
-          <div class="help-list" data-help="gestures"></div>
-        </section>
-        <section>
-          <h3>Navigation</h3>
-          <div class="help-list" data-help="system"></div>
-        </section>
-      </div>
-      <p class="fineprint">Hand tracking is processed locally in the browser. Camera frames are not uploaded.</p>
-    </div>
-  </div>
-
-  <div class="modal hidden" id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
-    <div class="modal-card glass">
-      <div class="modal-head">
-        <h2 id="settingsTitle">Settings</h2>
-        <button class="icon-btn" id="btnCloseSettings" type="button" aria-label="Close settings">
-          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="m18.3 5.7-1.4-1.4L12 9.2 7.1 4.3 5.7 5.7 10.6 10.6 5.7 15.5l1.4 1.4 4.9-4.9 4.9 4.9 1.4-1.4-4.9-4.9 4.9-4.9Z"/></svg>
-        </button>
-      </div>
-
-      <div class="settings-grid">
-        <div class="setting">
-          <label for="setQuality">Graphics Quality</label>
-          <select id="setQuality">
-            <option value="auto">Auto</option>
-            <option value="low">Low</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
-            <option value="ultra">Ultra</option>
-          </select>
-        </div>
-
-        <div class="setting">
-          <span class="setting-label">Particles</span>
-          <div class="segmented" id="setParticles">
-            <button data-particles="auto" class="active" type="button">Auto</button>
-            <button data-particles="25000" type="button">25K</button>
-            <button data-particles="40000" type="button">40K</button>
-            <button data-particles="60000" type="button">60K</button>
-          </div>
-        </div>
-
-        <div class="setting switch-setting">
-          <label for="setPost">Post Processing</label>
-          <input type="checkbox" id="setPost" role="switch" checked />
-        </div>
-
-        <div class="setting switch-setting">
-          <label for="setGesture">Gesture Tracking</label>
-          <input type="checkbox" id="setGesture" role="switch" />
-        </div>
-
-        <div class="setting switch-setting">
-          <label for="setAudio">Audio</label>
-          <input type="checkbox" id="setAudio" role="switch" />
-        </div>
-
-        <div class="setting switch-setting">
-          <label for="setReducedMotion">Reduced Motion</label>
-          <input type="checkbox" id="setReducedMotion" role="switch" />
-        </div>
-      </div>
-      <p class="fineprint">Preferences are stored locally in your browser.</p>
-    </div>
-  </div>
-
-  <div class="modal hidden" id="searchModal" role="dialog" aria-modal="true" aria-labelledby="searchTitle">
-    <div class="modal-card glass search-card">
-      <div class="modal-head">
-        <h2 id="searchTitle">Object Database</h2>
-        <button class="icon-btn" id="btnSearchClose" type="button" aria-label="Close search">
-          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="m18.3 5.7-1.4-1.4L12 9.2 7.1 4.3 5.7 5.7 10.6 10.6 5.7 15.5l1.4 1.4 4.9-4.9 4.9 4.9 1.4-1.4-4.9-4.9 4.9-4.9Z"/></svg>
-        </button>
-      </div>
-      <input class="search-input" id="searchInput" type="search" placeholder="Search planets, moons, stations, wormholes…" autocomplete="off" />
-      <div class="search-results" id="searchResults"></div>
-      <p class="fineprint">Press ESC to close. Selecting an object focuses it.</p>
-    </div>
-  </div>
-
-  <div class="toast-host" id="toastHost" aria-live="polite"></div>
-
-  <noscript>
-    <div class="overlay noscript">CosmoVision requires JavaScript and WebGL to render the interactive universe.</div>
-  </noscript>
-
-  <script type="module" src="script.js"></script>
-</body>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>
